@@ -25,6 +25,18 @@ namespace simple {
         /// Execute queued drawing commands.
         void finishFrame();
 
+        /// Sets the viewport dimensions.
+        /**
+         * The viewport determines over which portion of the framebuffer the draw commands issued by finishFrame() will
+         * draw.
+         *
+         * The coordinate system has its origin at the lower left corner of the screen.
+         *
+         * @param lower_left Coordinates of the lower left corner of the viewport.
+         * @param top_right Coordinates of the top right corner of the viewport.
+         */
+        void setViewport(glm::ivec2 lower_left, glm::ivec2 top_right) const;
+
     private:
         std::vector<glm::vec2> m_cmd_q {};
 

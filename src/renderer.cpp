@@ -81,4 +81,9 @@ namespace simple {
         m_cmd_q.clear();
     }
 
+    void Renderer::setViewport(glm::ivec2 lower_left, glm::ivec2 top_right) const
+    {
+        gl.Viewport(lower_left.x, lower_left.y, top_right.x, top_right.y);
+    }
+
 } // simple
