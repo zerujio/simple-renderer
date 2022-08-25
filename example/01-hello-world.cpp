@@ -8,17 +8,31 @@
 #include <iostream>
 #include <cmath>
 
+struct UserData
+{
+    float camera_fov;
+    float camera_near;
+    float camera_far;
+    simple::Camera &camera;
+};
+
 void updateResolution(GLFWwindow *window, int width, int height)
 {
     // setViewport operates on the OpenGL context; it does not need a Renderer instance.
-    simple::Renderer::setViewport(glm::ivec2() , glm::ivec2(width, height));
+    simple::Renderer::setViewport(glm::ivec2(), glm::ivec2(width, height));
+
+    auto data = static_cast<const UserData *>(glfwGetWindowUserPointer(window));
+    data->camera.setProjectionMatrix(glm::perspectiveFov(data->camera_fov,
+                                                         float(width), float(height),
+                                                         data->camera_near, data->camera_far));
 }
 
 auto main() -> int
 {
     glfwInit();
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);   // create an OpenGL context with debug capabilities
-    auto window = glfwCreateWindow(1024, 768, "Hello world!", nullptr, nullptr);
+    glm::ivec2 window_size {1024, 768};
+    auto window = glfwCreateWindow(window_size.x, window_size.y, "Hello world!", nullptr, nullptr);
     if (!window) {
         std::cerr << "window creation failed" << std::endl;
         return -1;
@@ -31,10 +45,11 @@ auto main() -> int
         return -2;
     }
 
+    // Shaders are GLSL code. proj_matrix, view_matrix and model_matrix are built-in uniforms (See ShaderProgram docs).
     auto vert_src = R"glsl(
     void main()
     {
-        gl_Position = model_tr * vec4(vertex_position, 1.0f);
+        gl_Position = proj_matrix * view_matrix * model_matrix * vec4(vertex_position, 1.0f);
     }
     )glsl";
 
@@ -50,6 +65,14 @@ auto main() -> int
 
     {
         simple::Renderer renderer;  // Resources are allocated at construction
+        simple::Camera camera;
+        UserData callback_data {glm::pi<float>() / 2.0f, 0.01f, 100.0f, camera};
+        glfwSetWindowUserPointer(window, &callback_data);
+
+        camera.setViewMatrix(glm::lookAt(glm::vec3(0.0f, 0.0f, 1.0f), {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}));
+        camera.setProjectionMatrix(glm::perspectiveFov(callback_data.camera_fov,
+                                                       float(window_size.x), float(window_size.y),
+                                                       callback_data.camera_near, callback_data.camera_far));
 
         simple::ShaderProgram program {vert_src, frag_src}; // compile shaders
 
@@ -58,10 +81,10 @@ auto main() -> int
             glm::vec3 point {std::cos(glfwGetTime()), std::sin(glfwGetTime()), 0.0f};
             glm::mat4 transform{glm::translate(glm::mat4(1.0f), point)};
             renderer.draw(program, transform);
-            renderer.finishFrame();
+            renderer.finishFrame(camera);
             glfwSwapBuffers(window);
         }
-    }   // The Renderer should be destroyed before destroying the context it operates on!
+    }   // The Renderer should be destroyed before destroying the context it operates on
 
     glfwDestroyWindow(window);
     glfwTerminate();

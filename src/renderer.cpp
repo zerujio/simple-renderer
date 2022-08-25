@@ -1,6 +1,6 @@
 #include "simple-renderer/renderer.hpp"
 
-#include "shader_variables.hpp"
+#include "glsl_definitions.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -25,10 +25,13 @@ namespace simple {
         m_draw_calls[&program].emplace_back(model_transform);
     }
 
-    void Renderer::finishFrame()
+    void Renderer::finishFrame(const Camera &camera)
     {
         gl.Clear(GL_COLOR_BUFFER_BIT);
+        gl.PointSize(2.5f);
         m_va->bind();
+
+        camera.bindUniformBlock();
 
         for (auto &program_pair : m_draw_calls)
         {
@@ -37,7 +40,7 @@ namespace simple {
             auto &transforms = program_pair.second;
             for (const auto &tr : transforms)
             {
-                gl.UniformMatrix4fv(program->model_location, 1, false, glm::value_ptr(tr));
+                gl.UniformMatrix4fv(model_matrix_def.layout.location, 1, false, glm::value_ptr(tr));
                 gl.DrawArrays(GL_POINTS, 0, 1);
             }
             transforms.clear();

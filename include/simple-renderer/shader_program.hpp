@@ -22,9 +22,9 @@ namespace simple {
          * The only predefined output for the vertex stage is the built-in gl_Position variable.
          *
          * Both vertex and fragment shaders have access to the following uniforms:
-         *      mat4 model_tr   : model space to world space transform matrix.
-         *      mat4 view_tr    : world space to camera space transform matrix.
-         *      mat4 proj_tr    : camera space to clip space transform matrix.
+         *      mat4 model_matrix   : model space to world space transform matrix.
+         *      mat4 view_matrix    : world space to camera space transform matrix.
+         *      mat4 proj_matrix    : camera space to clip space transform matrix.
          *
          * Fragment shaders have a single pre-defined output:
          *      vec4 frag_color : final color for this fragment.
@@ -36,9 +36,6 @@ namespace simple {
 
     private:
         glutils::Guard<glutils::Program> m_program;
-        int model_location;
-        int view_location;
-        int proj_location;
     };
 
 } // simple

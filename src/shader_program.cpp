@@ -1,30 +1,45 @@
 #include <simple-renderer/shader_program.hpp>
 
-#include "shader_variables.hpp"
+#include "glsl_definitions.hpp"
 
 #include <glutils/error.hpp>
 
 #include <sstream>
 #include <array>
+#include <iostream>
 
 namespace simple {
 
     using namespace glutils;
 
-    const std::string vertex_attrib_decl_str = (std::ostringstream()
-            << vertex_position_decl << '\n'
-            << vertex_normal_decl << '\n'
-            << vertex_color_decl << '\n'
-    ).str();
+    static auto getVertexAttribDefString() -> const std::string &
+    {
+        static const auto str {
+            ( std::ostringstream()
+            << vertex_position_def  << '\n'
+            << vertex_normal_def    << '\n'
+            << vertex_color_def     << '\n'
+            ).str()
+        };
+        return str;
+    }
 
-    static const std::string uniform_decl_str = (std::ostringstream()
-            << model_tr_decl << '\n'
-            << view_tr_decl << '\n'
-            << proj_tr_decl << '\n'
-    ).str();
+    static auto getUniformDefString() -> const std::string &
+    {
+        static const auto str {
+            ( std::ostringstream()
+                    << model_matrix_def << '\n'
+                    << camera_uniform_block_def << '\n'
+            ).str()
+        };
+        return str;
+    }
 
-    static const std::string frag_out_decl_str = (std::ostringstream() << frag_color_decl << '\n').str();
-
+    static auto getFragOutDefString() -> const std::string &
+    {
+        static const auto str {(std::ostringstream() << frag_color_def << '\n').str()};
+        return str;
+    }
 
     ShaderProgram::ShaderProgram(const char *vert_src, const char *frag_src)
     {
@@ -32,10 +47,18 @@ namespace simple {
         {   // vertex shader compilation
             std::array strings {
                     glsl_version_c_str,
-                    vertex_attrib_decl_str.c_str(),
-                    uniform_decl_str.c_str(),
+                    getVertexAttribDefString().c_str(),
+                    getUniformDefString().c_str(),
                     vert_src
             };
+
+            /* DEBUG */
+            std::cout << "Compiling vertex shader:\n";
+            for (auto s : strings)
+                std::cout << s;
+            std::cout << std::endl;
+            /* DEBUG */
+
             vert->setSource(strings.size(), strings.data());
             vert->compile();
             if (!vert->getParameter(Shader::Parameter::compile_status))
@@ -45,11 +68,19 @@ namespace simple {
         Guard<Shader> frag {Shader::Type::fragment};
         {   // fragment shader compilation
             std::array strings {
-                glsl_version_c_str,
-                uniform_decl_str.c_str(),
-                frag_out_decl_str.c_str(),
-                frag_src
+                    glsl_version_c_str,
+                    getUniformDefString().c_str(),
+                    getFragOutDefString().c_str(),
+                    frag_src
             };
+
+            /* DEBUG */
+            std::cout << "Compiling fragment shader:\n";
+            for (auto s : strings)
+                    std::cout << s;
+            std::cout << std::endl;
+            /* DEBUG */
+
             frag->setSource(strings.size(), strings.data());
             frag->compile();
             if (!frag->getParameter(Shader::Parameter::compile_status))
@@ -64,9 +95,5 @@ namespace simple {
 
         if (!m_program->getParameter(Program::Parameter::link_status))
             throw GLError("Program linking error");
-
-        model_location = m_program->getResourceLocation(GL_UNIFORM, model_tr_decl.name);
-        view_location = m_program->getResourceLocation(GL_UNIFORM, view_tr_decl.name);
-        proj_location = m_program->getResourceLocation(GL_UNIFORM, proj_tr_decl.name);
     }
 } // simple

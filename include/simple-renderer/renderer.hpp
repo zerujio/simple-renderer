@@ -2,6 +2,7 @@
 #define SIMPLERENDERER_RENDERER_HPP
 
 #include "shader_program.hpp"
+#include "camera.hpp"
 
 #include <glutils/guard.hpp>
 #include <glutils/program.hpp>
@@ -29,7 +30,7 @@ namespace simple {
         void draw(const ShaderProgram &program, const glm::mat4 &model_transform);
 
         /// Execute queued drawing commands.
-        void finishFrame();
+        void finishFrame(const Camera& camera);
 
         /// Sets the viewport dimensions.
         /**
