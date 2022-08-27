@@ -8,6 +8,13 @@
 #include <iostream>
 #include <cmath>
 
+struct Cube {
+    static const std::vector<glm::vec3> vertex_positions;
+    static const std::vector<glm::vec3> vertex_normals;
+    static const std::vector<glm::vec2> vertex_uvs;
+    static const std::vector<unsigned int> indices;
+};
+
 struct UserData
 {
     float camera_fov;
@@ -45,7 +52,11 @@ auto main() -> int
         return -2;
     }
 
-    // Shaders are GLSL code. proj_matrix, view_matrix and model_matrix are built-in uniforms (See ShaderProgram docs).
+    glutils::enableDebugCallback(); // set a debug callback for the current context.
+    glfwSetWindowSizeCallback(window, updateResolution);
+
+    // Shaders are GLSL code.
+    // proj_matrix, view_matrix and model_matrix are built-in uniforms (See ShaderProgram).
     auto vert_src = R"glsl(
     void main()
     {
@@ -60,34 +71,135 @@ auto main() -> int
     }
     )glsl";
 
-    glutils::enableDebugCallback(); // set a debug callback for the current context.
-    glfwSetWindowSizeCallback(window, updateResolution);
-
     {
-        simple::Renderer renderer;  // Resources are allocated at construction
+        simple::Renderer renderer;
         simple::Camera camera;
+
         UserData callback_data {glm::pi<float>() / 2.0f, 0.01f, 100.0f, camera};
         glfwSetWindowUserPointer(window, &callback_data);
 
-        camera.setViewMatrix(glm::lookAt(glm::vec3(0.0f, 0.0f, 1.0f), {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}));
+        camera.setViewMatrix(glm::lookAt(glm::vec3(1.0f, 1.0f, 1.0f), {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}));
         camera.setProjectionMatrix(glm::perspectiveFov(callback_data.camera_fov,
                                                        float(window_size.x), float(window_size.y),
                                                        callback_data.camera_near, callback_data.camera_far));
 
         simple::ShaderProgram program {vert_src, frag_src}; // compile shaders
 
+        simple::Mesh mesh {Cube::vertex_positions, Cube::vertex_normals, Cube::vertex_uvs, Cube::indices};
+
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
-            glm::vec3 point {std::cos(glfwGetTime()), std::sin(glfwGetTime()), 0.0f};
-            glm::mat4 transform{glm::translate(glm::mat4(1.0f), point)};
-            renderer.draw(program, transform);
+            glm::mat4 transform{glm::rotate(glm::mat4(1.0f), float(glfwGetTime()), {0.0f, 1.0f, 0.0f})};
+            renderer.draw(program, mesh, transform);
             renderer.finishFrame(camera);
             glfwSwapBuffers(window);
         }
-    }   // The Renderer should be destroyed before destroying the context it operates on
+        // WARNING:
+        // Renderer and Camera should be destroyed before destroying the context they operate on
+    }
 
     glfwDestroyWindow(window);
     glfwTerminate();
 
     return 0;
 }
+
+const std::vector<glm::vec3> Cube::vertex_positions
+{
+        // face 0
+        { .5, .5,-.5},
+        { .5,-.5,-.5},
+        {-.5, .5,-.5},
+        {-.5,-.5,-.5},
+        // face 1
+        { .5, .5, .5},
+        { .5,-.5, .5},
+        {-.5, .5, .5},
+        {-.5,-.5, .5},
+        // face 2
+        { .5, .5, .5},
+        { .5, .5,-.5},
+        {-.5, .5, .5},
+        {-.5, .5,-.5},
+        // face 3
+        { .5,-.5, .5},
+        { .5,-.5,-.5},
+        {-.5,-.5, .5},
+        {-.5,-.5,-.5},
+        // face 4
+        { .5, .5, .5},
+        { .5, .5,-.5},
+        { .5,-.5, .5},
+        { .5,-.5,-.5},
+        // face 5
+        {-.5, .5, .5},
+        {-.5, .5,-.5},
+        {-.5,-.5, .5},
+        {-.5,-.5,-.5},
+};
+
+const std::vector<glm::vec3> Cube::vertex_normals
+{
+        { .0, .0,-1.},
+        { .0, .0,-1.},
+        { .0, .0,-1.},
+        { .0, .0,-1.},
+        { .0, .0, 1.},
+        { .0, .0, 1.},
+        { .0, .0, 1.},
+        { .0, .0, 1.},
+        { 0., 1., 0.},
+        { 0., 1., 0.},
+        { 0., 1., 0.},
+        { 0., 1., 0.},
+        { 0.,-1., 0.},
+        { 0.,-1., 0.},
+        { 0.,-1., 0.},
+        { 0.,-1., 0.},
+        { 1., 0., 0.},
+        { 1., 0., 0.},
+        { 1., 0., 0.},
+        { 1., 0., 0.},
+        {-1., 0., 0.},
+        {-1., 0., 0.},
+        {-1., 0., 0.},
+        {-1., 0., 0.},
+};
+
+const std::vector<glm::vec2> Cube::vertex_uvs
+{
+        {1., 0.},
+        {1., 1.},
+        {0., 0.},
+        {0., 1.},
+        {1., 0.},
+        {1., 1.},
+        {0., 0.},
+        {0., 1.},
+        {1., 0.},
+        {1., 1.},
+        {0., 0.},
+        {0., 1.},
+        {1., 0.},
+        {1., 1.},
+        {0., 0.},
+        {0., 1.},
+        {1., 0.},
+        {1., 1.},
+        {0., 0.},
+        {0., 1.},
+        {1., 0.},
+        {1., 1.},
+        {0., 0.},
+        {0., 1.},
+};
+
+const std::vector<unsigned int> Cube::indices
+{
+        1, 3, 0,    0, 3, 2,    // face 0
+        6, 5, 4,    5, 6, 7,    // face 1
+        9, 10, 8,   10, 9, 11,  // face 2
+        14, 13, 12, 13, 14, 15, // face 3
+        19, 16, 18, 16, 19, 17, // face 4
+        22, 21, 23, 21, 22, 20  // face 5
+};

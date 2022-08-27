@@ -11,7 +11,7 @@ namespace simple {
     // Vertex attribute declarations
     extern const glsl::Definition vertex_position_def;
     extern const glsl::Definition vertex_normal_def;
-    extern const glsl::Definition vertex_color_def;
+    extern const glsl::Definition vertex_uv_def;
 
     // Uniform declarations
 

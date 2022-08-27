@@ -16,9 +16,9 @@ namespace simple {
     {
         static const auto str {
             ( std::ostringstream()
-            << vertex_position_def  << '\n'
-            << vertex_normal_def    << '\n'
-            << vertex_color_def     << '\n'
+                    << vertex_position_def << '\n'
+                    << vertex_normal_def << '\n'
+                    << vertex_uv_def << '\n'
             ).str()
         };
         return str;
@@ -52,13 +52,6 @@ namespace simple {
                     vert_src
             };
 
-            /* DEBUG */
-            std::cout << "Compiling vertex shader:\n";
-            for (auto s : strings)
-                std::cout << s;
-            std::cout << std::endl;
-            /* DEBUG */
-
             vert->setSource(strings.size(), strings.data());
             vert->compile();
             if (!vert->getParameter(Shader::Parameter::compile_status))
@@ -73,13 +66,6 @@ namespace simple {
                     getFragOutDefString().c_str(),
                     frag_src
             };
-
-            /* DEBUG */
-            std::cout << "Compiling fragment shader:\n";
-            for (auto s : strings)
-                    std::cout << s;
-            std::cout << std::endl;
-            /* DEBUG */
 
             frag->setSource(strings.size(), strings.data());
             frag->compile();

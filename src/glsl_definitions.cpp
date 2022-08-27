@@ -20,12 +20,12 @@ namespace simple {
             .name       = "vertex_normal"
     };
 
-    const glsl::Definition vertex_color_def
+    const glsl::Definition vertex_uv_def
     {
             .layout     {.location = 2},
             .storage    = glsl::Storage::in,
-            .type       = glsl::Type::vec4_,
-            .name       = "vertex_color"
+            .type       = glsl::Type::vec2_,
+            .name       = "vertex_uv"
     };
 
     // Uniforms

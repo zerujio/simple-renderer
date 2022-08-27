@@ -1,6 +1,7 @@
 add_library(simple-renderer STATIC
         renderer.cpp
         shader_program.cpp
+        mesh.cpp
         glsl_definitions.cpp
         glsl_syntax.cpp
         camera.cpp)
