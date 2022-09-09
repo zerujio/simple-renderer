@@ -3,7 +3,7 @@ add_library(simple-renderer STATIC
         shader_program.cpp
         mesh.cpp
         glsl_definitions.cpp
-        glsl_syntax.cpp
+        ../lib/glutils-cpp/src/glsl_syntax.cpp
         camera.cpp)
 target_include_directories(simple-renderer PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(simple-renderer

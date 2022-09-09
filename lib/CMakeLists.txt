@@ -10,3 +10,6 @@ add_subdirectory(glutils-cpp)
 
 # glm
 add_subdirectory(glm)
+
+# stb_image
+add_subdirectory(stb)
