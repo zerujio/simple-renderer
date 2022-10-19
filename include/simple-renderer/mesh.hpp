@@ -4,6 +4,7 @@
 #include <glutils/guard.hpp>
 #include <glutils/buffer.hpp>
 #include <glutils/vertex_array.hpp>
+#include <glutils/gl.hpp>
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
