@@ -1,6 +1,7 @@
 #include <simple-renderer/camera.hpp>
 
 #include "glsl_definitions.hpp"
+#include "glutils/gl.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -10,12 +11,12 @@ namespace simple {
 
     constexpr auto mat4_size = sizeof(glm::mat4);
 
-    namespace gl = glutils;
+    using glutils::gl;
 
     Camera::Camera()
     {
         std::array init_data {glm::mat4(1.0f), glm::mat4(1.0f)};
-        m_buffer->allocateImmutable(2 * mat4_size, gl::Buffer::StorageFlags::dynamic_storage, init_data.data());
+        m_buffer->allocateImmutable(2 * mat4_size, glutils::Buffer::StorageFlags::dynamic_storage, init_data.data());
     }
 
     void Camera::setViewMatrix(const glm::mat4 &matrix) const
@@ -30,7 +31,7 @@ namespace simple {
 
     void Camera::bindUniformBlock() const
     {
-        gl::gl.BindBufferBase(GL_UNIFORM_BUFFER, camera_uniform_block_def.layout.binding, m_buffer->getName());
+        gl.BindBufferBase(GL_UNIFORM_BUFFER, camera_uniform_block_def.layout.binding, m_buffer->getName());
     }
 
 } // simple

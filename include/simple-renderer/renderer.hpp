@@ -15,7 +15,7 @@
 #include <glm/vec4.hpp>
 #include <glm/mat4x4.hpp>
 
-#include <queue>
+#include <vector>
 
 namespace simple {
 
@@ -54,18 +54,10 @@ namespace simple {
             const ShaderProgram* program;
             const Mesh* mesh;
             glm::mat4 transform;
-
-            DrawCall(const ShaderProgram& p, const Mesh& m, const glm::mat4& t);
-            DrawCall(const ShaderProgram& p, const Mesh& m, glm::mat4&& t);
         };
 
-        struct DrawCallCompare
-        {
-            auto operator() (const DrawCall* l, const DrawCall* r) const -> bool;
-        };
-
-        std::priority_queue<const DrawCall*, std::vector<const DrawCall*>, DrawCallCompare> m_draw_queue;
-        std::vector<DrawCall> m_draw_calls;
+        std::vector<DrawCall> m_draw_call_data;
+        std::vector<const DrawCall*> m_scratch_buffer;
     };
 
 } // simple

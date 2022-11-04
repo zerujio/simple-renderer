@@ -55,7 +55,7 @@ namespace simple {
             vert->setSource(strings.size(), strings.data());
             vert->compile();
             if (!vert->getParameter(Shader::Parameter::compile_status))
-                throw GLError("Vertex shader compilation error");
+                throw GLError(vert->getInfoLog());
         }
 
         Guard<Shader> frag {Shader::Type::fragment};
@@ -70,7 +70,9 @@ namespace simple {
             frag->setSource(strings.size(), strings.data());
             frag->compile();
             if (!frag->getParameter(Shader::Parameter::compile_status))
-                throw GLError("Fragment shader compilation error");
+            {
+                throw GLError(vert->getInfoLog());
+            }
         }
 
         m_program->attachShader(*vert);

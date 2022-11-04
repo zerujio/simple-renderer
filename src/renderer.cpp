@@ -4,6 +4,8 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+#include <algorithm>
+
 using namespace glutils;
 
 namespace simple {
@@ -17,12 +19,12 @@ namespace simple {
 
     void Renderer::draw(const ShaderProgram &program, const Mesh &mesh, const glm::mat4 &model_transform)
     {
-        const auto& draw_call = m_draw_calls.emplace_back(program, mesh, model_transform);
-        m_draw_queue.push(&draw_call);
+        m_draw_call_data.push_back({&program, &mesh, model_transform});
     }
+
     void Renderer::draw(const ShaderProgram &program, const Mesh &mesh, glm::mat4 &&model_transform)
     {
-        m_draw_queue.push(&m_draw_calls.emplace_back(program, mesh, model_transform));
+        m_draw_call_data.push_back({&program, &mesh, model_transform});
     }
 
 
@@ -33,12 +35,29 @@ namespace simple {
 
         camera.bindUniformBlock();
 
+        for (const DrawCall& draw_call : m_draw_call_data)
+            m_scratch_buffer.push_back(&draw_call);
+
+        std::sort(m_scratch_buffer.begin(), m_scratch_buffer.end(),
+                  [](const DrawCall* l, const DrawCall* r)
+                  {
+                      const auto l_program = l->program->m_program->getName();
+                      const auto r_program = r->program->m_program->getName();
+
+                      if (l_program < r_program)
+                          return true;
+
+                      const auto l_mesh = l->mesh->m_vertex_array->getName();
+                      const auto r_mesh = r->mesh->m_vertex_array->getName();
+
+                      return l_program == r_program && l_mesh < r_mesh;
+                  });
+
         glutils::Program current_program;
         glutils::VertexArray current_vertex_array;
-        while (!m_draw_queue.empty())
-        {
-            const auto draw_call = m_draw_queue.top();
 
+        for (const DrawCall* draw_call : m_scratch_buffer)
+        {
             // Check if shader program changed
             {
                 const auto next_program = draw_call->program->m_program.getHandle();
@@ -71,30 +90,10 @@ namespace simple {
                 gl.DrawArrays(mesh->m_draw_mode,
                               mesh->m_array_index_offset,
                               mesh->m_index_count);
-
-            m_draw_queue.pop();
         }
+
+        m_draw_call_data.clear();
+        m_scratch_buffer.clear();
     }
 
-    Renderer::DrawCall::DrawCall(const ShaderProgram &p, const Mesh &m, const glm::mat4 &t)
-    : program(&p), mesh(&m), transform(t)
-    {}
-
-    Renderer::DrawCall::DrawCall(const ShaderProgram &p, const Mesh &m, glm::mat4 &&t)
-    : program(&p), mesh(&m), transform(t)
-    {}
-
-    auto Renderer::DrawCallCompare::operator()(const Renderer::DrawCall *l, const Renderer::DrawCall *r) const -> bool
-    {
-        const auto l_program = l->program->m_program->getName();
-        const auto r_program = r->program->m_program->getName();
-
-        if (l_program < r_program)
-            return true;
-
-        const auto l_mesh = l->mesh->m_vertex_array->getName();
-        const auto r_mesh = r->mesh->m_vertex_array->getName();
-
-        return l_program == r_program && l_mesh < r_mesh;
-    }
 } // simple
