@@ -31,7 +31,7 @@ namespace simple {
     void Renderer::finishFrame(const Camera &camera)
     {
         gl.Clear(GL_COLOR_BUFFER_BIT);
-        gl.PointSize(2.5f);
+        //gl.PointSize(2.5f);
 
         camera.bindUniformBlock();
 
