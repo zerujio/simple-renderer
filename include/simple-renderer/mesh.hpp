@@ -33,6 +33,27 @@ namespace simple {
              const std::vector<glm::vec2>& uvs = {},
              const std::vector<GLuint>& indices = {});
 
+        /// create an array mesh
+        explicit Mesh(glutils::Guard<glutils::Buffer> buffer, glutils::Guard<glutils::VertexArray> vertex_array,
+                      GLenum draw_mode, GLsizei index_count, GLint first_index) :
+              m_buffer(std::move(buffer)),
+              m_vertex_array(std::move(vertex_array)),
+              m_draw_mode(draw_mode),
+              m_index_count(index_count),
+              m_array_index_offset(first_index)
+        {}
+
+        /// create an indexed mesh
+        explicit Mesh(glutils::Guard<glutils::Buffer> buffer, glutils::Guard<glutils::VertexArray> vertex_array,
+                      GLenum draw_mode, GLenum index_type, GLsizei index_count, GLsizeiptr index_offset) :
+                m_buffer(std::move(buffer)),
+                m_vertex_array(std::move(vertex_array)),
+                m_draw_mode(draw_mode),
+                m_index_type(index_type),
+                m_index_count(index_count),
+                m_element_index_offset(index_offset)
+        {}
+
         enum class DrawMode
         {
             points  = GL_POINTS,
@@ -41,14 +62,31 @@ namespace simple {
         };
 
         void setDrawMode(DrawMode draw_mode);
-        auto getDrawMode() const -> DrawMode;
+        [[nodiscard]] auto getDrawMode() const -> DrawMode;
+
+        void setElementCount(GLsizei count) {m_index_count = count;}
+        [[nodiscard]] auto getElementCount() const {return m_index_count;}
+
+        void setIndexedDrawing(GLenum index_type) {m_index_type = index_type;}
+        [[nodiscard]] bool getIndexedDrawing() const {return m_index_type;}
+        [[nodiscard]] auto getIndexType() const {return m_index_type;}
+
+        void setArrayDrawing() {m_index_type = 0;}
+        [[nodiscard]] bool getArrayDrawing() const {return !m_index_type;}
+
+        /// used for indexed drawing (glDrawElements)
+        void setElementBufferOffset(GLsizeiptr offset) {m_element_index_offset = offset;}
+        [[nodiscard]] auto getElementBufferOffset() const {return m_element_index_offset;}
+
+        /// used for array drawing (glDrawArrays)
+        void setArrayIndexOffset(GLint offset) {m_array_index_offset = offset;}
+        [[nodiscard]] auto getArrayIndexOffset() const {return m_array_index_offset;}
 
     private:
-        glutils::Guard<glutils::Buffer> m_vertex_buffer;
-        glutils::Guard<glutils::Buffer> m_element_buffer;
+        glutils::Guard<glutils::Buffer> m_buffer;
         glutils::Guard<glutils::VertexArray> m_vertex_array;
         GLenum m_draw_mode {GL_TRIANGLES};
-        GLenum m_index_type;
+        GLenum m_index_type {0};
         GLsizei m_index_count;
         union {
             GLint m_array_index_offset;
