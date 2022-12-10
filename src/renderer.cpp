@@ -82,10 +82,19 @@ namespace simple {
 
             const auto mesh = draw_call->mesh;
             if (mesh->m_index_type)
-                gl.DrawElements(mesh->m_draw_mode,
-                                mesh->m_index_count,
-                                mesh->m_index_type,
-                                reinterpret_cast<const void *>(mesh->m_element_index_offset));
+            {
+                if (mesh->usesInstancedDrawing())
+                    gl.DrawElementsInstanced(mesh->m_draw_mode,
+                                             mesh->getElementCount(),
+                                             mesh->getIndexType(),
+                                             reinterpret_cast<void*>(mesh->getElementBufferOffset()),
+                                             mesh->getInstanceCount());
+                else
+                    gl.DrawElements(mesh->m_draw_mode,
+                                    mesh->m_index_count,
+                                    mesh->m_index_type,
+                                    reinterpret_cast<const void *>(mesh->m_element_index_offset));
+            }
             else
                 gl.DrawArrays(mesh->m_draw_mode,
                               mesh->m_array_index_offset,
