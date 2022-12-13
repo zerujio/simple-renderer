@@ -1,5 +1,6 @@
-#include <simple-renderer/renderer.hpp> // The header drags gl.h
-#include <glutils/debug.hpp>
+#include "simple-renderer/renderer.hpp"
+#include "glutils/debug.hpp"
+#include "glutils/gl.hpp" // this header drags gl.h
 
 #include <GLFW/glfw3.h>
 
@@ -86,11 +87,12 @@ auto main() -> int
         simple::ShaderProgram program {vert_src, frag_src}; // compile shaders
 
         simple::Mesh mesh {Cube::vertex_positions, Cube::vertex_normals, Cube::vertex_uvs, Cube::indices};
+        mesh.setDrawMode(simple::DrawMode::triangles);
 
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
             glm::mat4 transform{glm::rotate(glm::mat4(1.0f), float(glfwGetTime()), {0.0f, 1.0f, 0.0f})};
-            renderer.draw(program, mesh, transform);
+            renderer.draw(mesh, program, transform);
             renderer.finishFrame(camera);
             glfwSwapBuffers(window);
         }

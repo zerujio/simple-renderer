@@ -1,6 +1,8 @@
 #ifndef PROCEDURALPLACEMENTLIB_DRAW_COMMAND_HPP
 #define PROCEDURALPLACEMENTLIB_DRAW_COMMAND_HPP
 
+#include "type_set.hpp"
+
 #include <cstdint>
 #include <utility>
 
@@ -36,69 +38,74 @@ enum class IndexType
 /// base class for drawing commands
 struct DrawCommand
 {
+    DrawCommand() = default;
     explicit DrawCommand(DrawMode draw_mode) : mode(draw_mode) {}
 
     /// invoke the corresponding OpenGL command
-    virtual void operator() (const GLContext* context) const = 0;
+    virtual void operator() (const GLContext& context) const = 0;
 
-    DrawMode mode;
+    DrawMode mode {DrawMode::points};
 };
 
 /// glDrawArrays
 struct DrawArraysCommand : DrawCommand
 {
-    explicit DrawArraysCommand(DrawMode draw_mode = DrawMode::points,
-                      std::uint32_t first_index = 0,
-                      std::uint32_t index_count = 0) :
+    DrawArraysCommand() = default;
+    DrawArraysCommand(DrawMode draw_mode, std::uint32_t first_index, std::uint32_t index_count) :
             DrawCommand(draw_mode), first(first_index), count(index_count) {}
 
-    void operator()(const GLContext *context) const override;
+    void operator()(const GLContext &context) const override;
 
-    std::uint32_t first;
-    std::uint32_t count;
+    std::uint32_t first {0};
+    std::uint32_t count {0};
 };
 
 /// glDrawElements
 struct DrawElementsCommand : DrawCommand
 {
-    explicit DrawElementsCommand(DrawMode draw_mode = DrawMode::points,
-                        std::uint32_t index_count = 0,
-                        IndexType index_type = IndexType::unsigned_int,
-                        std::uintptr_t index_buffer_offset = 0) :
+    DrawElementsCommand() = default;
+    DrawElementsCommand(DrawMode draw_mode, std::uint32_t index_count, IndexType index_type,
+                        std::uintptr_t index_buffer_offset) :
             DrawCommand(draw_mode), count(index_count), type(index_type), offset(index_buffer_offset) {}
 
-    void operator()(const GLContext *context) const override;
+    void operator()(const GLContext &context) const override;
 
-    std::uint32_t count;
-    IndexType type;
-    std::uintptr_t offset;
+    std::uint32_t count {0};
+    IndexType type {IndexType::unsigned_int};
+    std::uintptr_t offset {0};
 };
 
 /// Base class for instanced drawing commands. Exists mostly as a "tag" class.
 struct InstancedDrawCommand
 {
-    explicit InstancedDrawCommand(std::uint32_t instance_count = 0) : instance_count(instance_count) {}
-    std::uint32_t instance_count;
+    InstancedDrawCommand() = default;
+    explicit InstancedDrawCommand(std::uint32_t instance_count) : instance_count(instance_count) {}
+    std::uint32_t instance_count {0};
 };
 
 /// glDrawArraysInstanced
 struct DrawArraysInstancedCommand : DrawArraysCommand, InstancedDrawCommand
 {
-    template<typename ...Args>
-    explicit DrawArraysInstancedCommand(Args&&... args, std::uint32_t instance_count = 0) :
-            DrawArraysCommand(std::forward<Args>(args)...), InstancedDrawCommand(instance_count) {}
+    DrawArraysInstancedCommand() = default;
+    DrawArraysInstancedCommand(DrawMode draw_mode, std::uint32_t first_index, std::uint32_t index_count,
+                               std::uint32_t instance_count) :
+            DrawArraysCommand(draw_mode, first_index, index_count), InstancedDrawCommand(instance_count) {}
 
-    void operator()(const GLContext *context) const override;
+    void operator()(const GLContext &context) const override;
 };
 
 struct DrawElementsInstancedCommand : DrawElementsCommand, InstancedDrawCommand
 {
-    template<typename ...Args>
-    explicit DrawElementsInstancedCommand(Args&&... args, std::uint32_t instance_count = 0) :
-            DrawElementsCommand(std::forward<Args>(args)...), InstancedDrawCommand(instance_count) {}
+    DrawElementsInstancedCommand() = default;
+    DrawElementsInstancedCommand(DrawMode draw_mode, std::uint32_t index_count, IndexType index_type,
+                                 std::uintptr_t index_buffer_offset, std::uint32_t instance_count) :
+            DrawElementsCommand(draw_mode, index_count, index_type, index_buffer_offset),
+            InstancedDrawCommand(instance_count) {}
 
-    void operator()(const GLContext *context) const override;
+    void operator()(const GLContext &context) const override;
 };
+
+using RendererCommandSet = TypeSet<DrawArraysCommand, DrawElementsCommand, DrawArraysInstancedCommand, DrawElementsInstancedCommand>;
 
 } // simple
 

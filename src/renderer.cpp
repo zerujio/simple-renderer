@@ -2,9 +2,12 @@
 
 #include "glsl_definitions.hpp"
 
-#include <glm/gtc/type_ptr.hpp>
+#include "glutils/gl.hpp"
+
+#include "glm/gtc/type_ptr.hpp"
 
 #include <algorithm>
+#include <utility>
 
 using namespace glutils;
 
@@ -17,92 +20,76 @@ namespace simple {
     }
 
 
-    void Renderer::draw(const ShaderProgram &program, const Mesh &mesh, const glm::mat4 &model_transform)
+    void Renderer::draw(const Drawable& drawable, const ShaderProgram &program, const glm::mat4 &model_transform)
     {
-        m_draw_call_data.push_back({&program, &mesh, model_transform});
+        const std::size_t uniform_data_index = m_uniform_data.size();
+        m_uniform_data.emplace_back(model_transform);
+
+        drawable.collectDrawCommands(CommandCollector(m_command_queue, uniform_data_index, program.m_program.getHandle()));;
     }
 
-    void Renderer::draw(const ShaderProgram &program, const Mesh &mesh, glm::mat4 &&model_transform)
+    struct Renderer::CommandSequenceBuilder
     {
-        m_draw_call_data.push_back({&program, &mesh, model_transform});
-    }
+        CommandSequenceBuilder(Renderer& renderer) : renderer(renderer) {}
 
+        template<typename Command>
+        void operator() (const RendererCommandQueue::CommandVector<Command>& command_vector) const
+        {
+            for (const auto& [command, args] : command_vector)
+            {
+                const auto [uniform_index, program, vertex_array] = args;
+                renderer.m_command_sequence.emplace_back(program,
+                                                         vertex_array,
+                                                         &renderer.m_uniform_data[uniform_index],
+                                                         &command);
+            }
+        }
+
+        Renderer& renderer;
+    };
 
     void Renderer::finishFrame(const Camera &camera)
     {
         gl.Clear(GL_COLOR_BUFFER_BIT);
         //gl.PointSize(2.5f);
 
+        m_command_queue.forEachCommandType(CommandSequenceBuilder(*this));
+
+        std::sort(m_command_sequence.begin(), m_command_sequence.end());
+
         camera.bindUniformBlock();
 
-        for (const DrawCall& draw_call : m_draw_call_data)
-            m_scratch_buffer.push_back(&draw_call);
+        Program bound_program {};
+        VertexArray bound_vertex_array {};
+        const UniformData * bound_uniform {nullptr};
 
-        std::sort(m_scratch_buffer.begin(), m_scratch_buffer.end(),
-                  [](const DrawCall* l, const DrawCall* r)
-                  {
-                      const auto l_program = l->program->m_program->getName();
-                      const auto r_program = r->program->m_program->getName();
-
-                      if (l_program < r_program)
-                          return true;
-
-                      const auto l_mesh = l->mesh->m_vertex_array->getName();
-                      const auto r_mesh = r->mesh->m_vertex_array->getName();
-
-                      return l_program == r_program && l_mesh < r_mesh;
-                  });
-
-        glutils::Program current_program;
-        glutils::VertexArray current_vertex_array;
-
-        for (const DrawCall* draw_call : m_scratch_buffer)
+        // iterate over commands in sequence, changing gl state when necessary
+        for (const auto& [program, vertex_array, uniform_data, command] : m_command_sequence)
         {
-            // Check if shader program changed
+            if (program != bound_program)
             {
-                const auto next_program = draw_call->program->m_program.getHandle();
-                if (current_program.getName() != next_program.getName())
-                {
-                    next_program.use();
-                    current_program = next_program;
-                }
+                program.use();
+                bound_program = program;
             }
 
-            // Check if vertex array changed
+            if (vertex_array != bound_vertex_array)
             {
-                const auto next_vertex_array = draw_call->mesh->m_vertex_array.getHandle();
-                if (current_vertex_array.getName() != next_vertex_array.getName())
-                {
-                    next_vertex_array.bind();
-                    current_vertex_array = next_vertex_array;
-                }
+                vertex_array.bind();
+                bound_vertex_array = vertex_array;
             }
 
-            gl.UniformMatrix4fv(model_matrix_def.layout.location, 1, false, glm::value_ptr(draw_call->transform));
-
-            const auto mesh = draw_call->mesh;
-            if (mesh->m_index_type)
+            if (uniform_data != bound_uniform)
             {
-                if (mesh->usesInstancedDrawing())
-                    gl.DrawElementsInstanced(mesh->m_draw_mode,
-                                             mesh->getElementCount(),
-                                             mesh->getIndexType(),
-                                             reinterpret_cast<void*>(mesh->getElementBufferOffset()),
-                                             mesh->getInstanceCount());
-                else
-                    gl.DrawElements(mesh->m_draw_mode,
-                                    mesh->m_index_count,
-                                    mesh->m_index_type,
-                                    reinterpret_cast<const void *>(mesh->m_element_index_offset));
+                gl.UniformMatrix4fv(model_matrix_def.layout.location, 1, false, glm::value_ptr(*uniform_data));
+                bound_uniform = uniform_data;
             }
-            else
-                gl.DrawArrays(mesh->m_draw_mode,
-                              mesh->m_array_index_offset,
-                              mesh->m_index_count);
+
+            (*command)(gl);
         }
 
-        m_draw_call_data.clear();
-        m_scratch_buffer.clear();
+        m_command_queue.clear();
+        m_command_sequence.clear();
+        m_uniform_data.clear();
     }
 
 } // simple
