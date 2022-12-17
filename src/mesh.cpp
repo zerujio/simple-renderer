@@ -1,6 +1,6 @@
 #include "simple-renderer/mesh.hpp"
 
-#include "glsl_definitions.hpp"
+#include "simple-renderer/glsl_definitions.hpp"
 
 #include <utility>
 #include <type_traits>

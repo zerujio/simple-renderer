@@ -1,6 +1,6 @@
 #include "simple-renderer/renderer.hpp"
 
-#include "glsl_definitions.hpp"
+#include "simple-renderer/glsl_definitions.hpp"
 
 #include "glutils/gl.hpp"
 

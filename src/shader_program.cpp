@@ -1,6 +1,6 @@
 #include <simple-renderer/shader_program.hpp>
 
-#include "glsl_definitions.hpp"
+#include "simple-renderer/glsl_definitions.hpp"
 
 #include <glutils/error.hpp>
 
@@ -55,7 +55,7 @@ namespace simple {
             vert->setSource(strings.size(), strings.data());
             vert->compile();
             if (!vert->getParameter(Shader::Parameter::compile_status))
-                throw GLError(vert->getInfoLog());
+                throw GLError("Vertex shader compilation error: " + vert->getInfoLog());
         }
 
         Guard<Shader> frag {Shader::Type::fragment};
@@ -71,7 +71,7 @@ namespace simple {
             frag->compile();
             if (!frag->getParameter(Shader::Parameter::compile_status))
             {
-                throw GLError(vert->getInfoLog());
+                throw GLError("Fragment shader compilation error: " + frag->getInfoLog());
             }
         }
 
@@ -82,6 +82,6 @@ namespace simple {
         m_program->detachShader(*frag);
 
         if (!m_program->getParameter(Program::Parameter::link_status))
-            throw GLError("Program linking error");
+            throw GLError("Program linking error: " + m_program->getInfoLog());
     }
 } // simple
