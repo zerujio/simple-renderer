@@ -8,24 +8,25 @@
 
 namespace simple {
 
-    /// Encapsulates camera related data.
-    class Camera
-    {
-        friend class Renderer;
-    public:
-        Camera();
+/// Encapsulates camera related data.
+class Camera
+{
+    friend class Renderer;
 
-        /// Set the view transform, which is accesible as 'view_matrix' in shaders.
-        void setViewMatrix(const glm::mat4 &matrix) const;
+public:
+    Camera();
 
-        /// Set the projection transform, which is accesible as 'proj_matrix' in shaders.
-        void setProjectionMatrix(const glm::mat4 &matrix) const;
+    /// Set the view transform, which is accesible as 'view_matrix' in shaders.
+    void setViewMatrix(const glm::mat4 &matrix) const;
 
-    private:
-        void bindUniformBlock() const;
+    /// Set the projection transform, which is accesible as 'proj_matrix' in shaders.
+    void setProjectionMatrix(const glm::mat4 &matrix) const;
 
-        glutils::Guard<glutils::Buffer> m_buffer;
-    };
+private:
+    void bindUniformBlock() const;
+
+    GL::Buffer m_buffer;
+};
 
 } // simple
 

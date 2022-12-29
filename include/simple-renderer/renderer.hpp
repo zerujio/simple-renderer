@@ -59,7 +59,7 @@ private:
     RendererCommandQueue m_command_queue;
 
     /// holds commands in the order they will be executed
-    std::vector<std::tuple<glutils::Program, glutils::VertexArray, const UniformData*, const DrawCommand*>>
+    std::vector<std::tuple<GL::ProgramHandle, GL::VertexArrayHandle, const UniformData*, const DrawCommand*>>
             m_command_sequence;
 
     struct CommandSequenceBuilder;

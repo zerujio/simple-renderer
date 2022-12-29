@@ -48,12 +48,12 @@ auto main() -> int
 
     glfwMakeContextCurrent(window);
 
-    if (!glutils::loadGLContext(glfwGetProcAddress)) {
+    if (!GL::loadGLContext(glfwGetProcAddress)) {
         std::cerr << "GL function loading failed" << std::endl;
         return -2;
     }
 
-    glutils::enableDebugCallback(); // set a debug callback for the current context.
+    GL::enableDebugCallback(); // set a debug callback for the current context.
     glfwSetWindowSizeCallback(window, updateResolution);
 
     // Shaders are GLSL code.

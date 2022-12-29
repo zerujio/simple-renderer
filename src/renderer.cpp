@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <utility>
 
-using namespace glutils;
+using namespace GL;
 
 namespace simple {
 
@@ -25,7 +25,7 @@ namespace simple {
         const std::size_t uniform_data_index = m_uniform_data.size();
         m_uniform_data.emplace_back(model_transform);
 
-        drawable.collectDrawCommands(CommandCollector(m_command_queue, uniform_data_index, program.m_program.getHandle()));;
+        drawable.collectDrawCommands(CommandCollector(m_command_queue, uniform_data_index, program.m_program));
     }
 
     struct Renderer::CommandSequenceBuilder
@@ -59,8 +59,8 @@ namespace simple {
 
         camera.bindUniformBlock();
 
-        Program bound_program {};
-        VertexArray bound_vertex_array {};
+        ProgramHandle bound_program {};
+        VertexArrayHandle bound_vertex_array {};
         const UniformData * bound_uniform {nullptr};
 
         // iterate over commands in sequence, changing gl state when necessary

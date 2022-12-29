@@ -33,10 +33,10 @@ namespace simple {
         explicit Mesh(const std::vector<glm::vec3>& positions,
              const std::vector<glm::vec3>& normals = {},
              const std::vector<glm::vec2>& uvs = {},
-             const std::vector<glutils::GLuint>& indices = {});
+             const std::vector<GL::GLuint>& indices = {});
 
         /// create an array mesh
-        explicit Mesh(glutils::Guard<glutils::Buffer> buffer, glutils::Guard<glutils::VertexArray> vertex_array,
+        explicit Mesh(GL::Buffer buffer, GL::VertexArray vertex_array,
                       DrawMode draw_mode, std::uint32_t index_count, std::uint32_t first_index,
                       std::uint32_t instance_count = 0) :
               m_buffer(std::move(buffer)),
@@ -49,7 +49,7 @@ namespace simple {
         {}
 
         /// create an indexed mesh
-        explicit Mesh(glutils::Guard<glutils::Buffer> buffer, glutils::Guard<glutils::VertexArray> vertex_array,
+        explicit Mesh(GL::Buffer buffer, GL::VertexArray vertex_array,
                       DrawMode draw_mode, IndexType index_type, std::uint32_t index_count, std::uintptr_t index_offset,
                       std::uint32_t instance_count = 0) :
                 m_buffer(std::move(buffer)),
@@ -81,8 +81,8 @@ namespace simple {
         void collectDrawCommands(const CommandCollector &collector) const override;
 
     private:
-        glutils::Guard<glutils::Buffer> m_buffer;
-        glutils::Guard<glutils::VertexArray> m_vertex_array;
+        GL::Buffer m_buffer;
+        GL::VertexArray m_vertex_array;
 
         DrawMode m_draw_mode {DrawMode::points};
         std::uint32_t m_index_count;

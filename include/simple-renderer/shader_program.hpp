@@ -35,7 +35,7 @@ namespace simple {
         ShaderProgram(const char *vert_src, const char *frag_src);
 
     private:
-        glutils::Guard<glutils::Program> m_program;
+        GL::Program m_program;
     };
 
 } // simple

@@ -2,7 +2,7 @@
 
 namespace simple {
 
-    using namespace glutils;
+    using namespace GL;
 
     // Vertex attributes
 

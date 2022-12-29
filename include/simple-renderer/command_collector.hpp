@@ -15,13 +15,13 @@ template<typename ... CommandTypes>
 class CommandCollector
 {
 public:
-    CommandCollector(CommandQueue<CommandTypes...> &command_queue, std::size_t uniform_data_index, glutils::Program program) :
+    CommandCollector(CommandQueue<CommandTypes...> &command_queue, std::size_t uniform_data_index, GL::ProgramHandle program) :
             m_command_queue(command_queue),
             m_bound_args(uniform_data_index, program)
     {}
 
     template<typename CommandType>
-    void emplace(CommandType &&command, glutils::VertexArray vertex_array) const
+    void emplace(CommandType &&command, GL::VertexArrayHandle vertex_array) const
     {
         m_command_queue.template emplace<std::remove_reference_t<CommandType>>(std::forward<CommandType>(command),
                 std::tuple_cat(m_bound_args, std::make_tuple(vertex_array)));
@@ -29,7 +29,7 @@ public:
 
 private:
     CommandQueue<CommandTypes...>& m_command_queue;
-    std::tuple<std::size_t, glutils::Program> m_bound_args;
+    std::tuple<std::size_t, GL::ProgramHandle> m_bound_args;
 };
 
 } // simple

@@ -9,8 +9,42 @@ namespace simple {
 class GPUBuffer
 {
 public:
+    using UsagePattern = glutils::Buffer::Usage;
+    using StorageFlags = glutils::Buffer::StorageFlags;
     using MapFlags = glutils::Buffer::AccessFlags;
     using MapMode = glutils::Buffer::AccessMode;
+
+    /// Create a new buffer object with no allocated memory.
+    GPUBuffer() = default;
+
+    /// Create a new buffer object, allocate a normal data store. @see allocate()
+    GPUBuffer(std::size_t size, UsagePattern usage, const void* data = nullptr)
+    {
+        allocate(size, usage, data);
+    }
+
+    /// Create a new buffer object and allocate a static data store. @see allocateStatic()
+    GPUBuffer(std::size_t size, StorageFlags flags, const void* data = nullptr)
+    {
+        allocateStatic(size, flags, data);
+    }
+
+    /// Return the size of the current data store, or 0 if no store has been allocated.
+    [[nodiscard]] std::size_t getSize() const {return m_size;}
+
+    /// Allocate storage for the buffer.
+    void allocate(std::size_t size, UsagePattern usage_pattern, const void* data = nullptr)
+    {
+        m_buffer->allocate(size, usage_pattern, data);
+        m_size = size;
+    }
+
+    /// Allocate static storage for the buffer. Static storage can't be resized or reassigned, but may perform better.
+    void allocateStatic(std::size_t size, StorageFlags flags, const void* data = nullptr)
+    {
+        m_buffer->allocateImmutable(size, flags, data);
+        m_size = size;
+    }
 
     /**
      * @brief Write data to buffer.
@@ -20,7 +54,7 @@ public:
      * @param size Amount of the data to copy to the buffer, in bytes.
      * @param data Pointer to the data to be copied.
      */
-    void write(std::size_t offset, std::size_t size, const void* data) const
+    void write(std::size_t offset, std::size_t size, const void* data)
     {
         m_buffer->write(static_cast<glutils::GLsizeiptr>(offset), static_cast<glutils::GLsizeiptr>(size), data);
     }
@@ -85,7 +119,13 @@ public:
     /// Unmap the buffer, invalidating the pointer obtained through map() or mapRange().
     void unmap() const { m_buffer->unmap(); }
 
-    /// Get the native handle of the buffer.
+    /// Synchronize attributes with the underlying buffer object, which may cause a stall in the GPU driver.
+    glutils::Buffer sync()
+    {
+        m_size = m_buffer->getSize();
+    }
+
+    /// Get a handle to the underlying OpenGL object.
     [[nodiscard]]
     glutils::Buffer getHandle() const { return m_buffer.getHandle(); }
 
@@ -94,63 +134,7 @@ public:
 
 protected:
     glutils::Guard<glutils::Buffer> m_buffer;
-};
-
-/**
- * @brief Wraps a non-resizable buffer in the graphics API.
- */
-class StaticGPUBuffer final : public GPUBuffer
-{
-public:
-    using StorageFlags = glutils::Buffer::StorageFlags;
-
-    /**
-     * @brief Create a new non-resizable buffer.
-     * @param size Size in bytes to allocate for the buffer.
-     * @param flags Storage options.
-     * @param data Pointer to data to initialize the buffer with. May be nullptr.
-     */
-    explicit StaticGPUBuffer(std::size_t size, StorageFlags flags = StorageFlags::none, const void* data = nullptr)
-    {
-        m_buffer->allocateImmutable(static_cast<glutils::GLsizeiptr>(size), flags, data);
-    }
-
-    [[nodiscard]]
-    StorageFlags getStorageFlags() const
-    {
-        return m_buffer->getStorageFlags();
-    }
-};
-
-/**
- * @brief Wraps a resizable buffer in the graphics API.
- */
-class DynamicGPUBuffer final : public GPUBuffer
-{
-    using Usage = glutils::Buffer::Usage;
-
-    /**
-     * @brief Create a new, resizable buffer.
-     * @param size Size in bytes of the initial capacity. May be zero.
-     * @param usage Usage pattern for the buffer.
-     * @param initial_data Pointer to data to initialize the buffer with. May be nullptr.
-     */
-    explicit DynamicGPUBuffer(std::size_t size, Usage usage, const void* initial_data = nullptr)
-    {
-        resize(size, usage, initial_data);
-    }
-
-     /**
-      * @brief Change the size of the buffer.
-      * Data contained within the buffer is lost when resized.
-      * @param size Size in bytes of the initial capacity. May be zero.
-      * @param usage Usage pattern for the buffer.
-      * @param initial_data Pointer to data to initialize the buffer with. May be nullptr.
-      */
-     void resize(std::size_t size, Usage usage, const void* initial_data = nullptr) const
-     {
-         m_buffer->allocate(static_cast<glutils::GLsizeiptr>(size), usage, initial_data);
-     }
+    std::size_t m_size;
 };
 
 } // simple

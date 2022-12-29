@@ -10,7 +10,7 @@
 
 namespace simple {
 
-    using namespace glutils;
+    using namespace GL;
 
     static auto getVertexAttribDefString() -> const std::string &
     {
@@ -43,7 +43,7 @@ namespace simple {
 
     ShaderProgram::ShaderProgram(const char *vert_src, const char *frag_src)
     {
-        Guard<Shader> vert {Shader::Type::vertex};
+        Shader vert {ShaderHandle::Type::vertex};
         {   // vertex shader compilation
             std::array strings {
                     glsl_version_c_str,
@@ -52,13 +52,13 @@ namespace simple {
                     vert_src
             };
 
-            vert->setSource(strings.size(), strings.data());
-            vert->compile();
-            if (!vert->getParameter(Shader::Parameter::compile_status))
-                throw GLError("Vertex shader compilation error: " + vert->getInfoLog());
+            vert.setSource(strings.size(), strings.data());
+            vert.compile();
+            if (!vert.getParameter(ShaderHandle::Parameter::compile_status))
+                throw GLError("Vertex shader compilation error: " + vert.getInfoLog());
         }
 
-        Guard<Shader> frag {Shader::Type::fragment};
+        Shader frag {ShaderHandle::Type::fragment};
         {   // fragment shader compilation
             std::array strings {
                     glsl_version_c_str,
@@ -67,21 +67,21 @@ namespace simple {
                     frag_src
             };
 
-            frag->setSource(strings.size(), strings.data());
-            frag->compile();
-            if (!frag->getParameter(Shader::Parameter::compile_status))
+            frag.setSource(strings.size(), strings.data());
+            frag.compile();
+            if (!frag.getParameter(ShaderHandle::Parameter::compile_status))
             {
-                throw GLError("Fragment shader compilation error: " + frag->getInfoLog());
+                throw GLError("Fragment shader compilation error: " + frag.getInfoLog());
             }
         }
 
-        m_program->attachShader(*vert);
-        m_program->attachShader(*frag);
-        m_program->link();
-        m_program->detachShader(*vert);
-        m_program->detachShader(*frag);
+        m_program.attachShader(vert);
+        m_program.attachShader(frag);
+        m_program.link();
+        m_program.detachShader(vert);
+        m_program.detachShader(frag);
 
-        if (!m_program->getParameter(Program::Parameter::link_status))
-            throw GLError("Program linking error: " + m_program->getInfoLog());
+        if (!m_program.getParameter(ProgramHandle::Parameter::link_status))
+            throw GLError("ProgramHandle linking error: " + m_program.getInfoLog());
     }
 } // simple

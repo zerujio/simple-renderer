@@ -30,7 +30,7 @@ class CommandQueue final
 public:
     using CommandSet = TypeSet<CommandTypes...>;
 
-    using CommandArgs = std::tuple<std::size_t, glutils::Program, glutils::VertexArray>;
+    using CommandArgs = std::tuple<std::size_t, GL::ProgramHandle, GL::VertexArrayHandle>;
 
     template<typename Command>
     using CommandVector = std::vector<std::pair<Command, CommandArgs>>;

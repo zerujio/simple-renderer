@@ -7,7 +7,7 @@
 
 namespace simple {
 
-using namespace glutils;
+using namespace GL;
 
 template<typename T>
 std::size_t getVectorByteSize(const std::vector<T>& vector)
@@ -53,39 +53,39 @@ Mesh::Mesh(const std::vector<glm::vec3>& positions, const std::vector<glm::vec3>
     const auto uv_offset = copyToByteArray(uvs, init_data);
     const auto index_offset = copyToByteArray(indices, init_data);
 
-    m_buffer->allocateImmutable(init_data.size(), Buffer::StorageFlags::none, init_data.data());
+    m_buffer.allocateImmutable(init_data.size(), BufferHandle::StorageFlags::none, init_data.data());
 
-    using ASize = VertexArray::AttribSize;
-    using AType = VertexArray::AttribType;
+    using ASize = VertexArrayHandle::AttribSize;
+    using AType = VertexArrayHandle::AttribType;
 
     // positions
     GLuint buffer_binding = 0;
-    m_vertex_array->bindVertexBuffer(buffer_binding, *m_buffer, position_offset, sizeof(glm::vec3));
+    m_vertex_array.bindVertexBuffer(buffer_binding, m_buffer, position_offset, sizeof(glm::vec3));
     const auto position_location = vertex_position_def.layout.location;
-    m_vertex_array->bindAttribute(position_location, buffer_binding);
-    m_vertex_array->setAttribFormat(position_location, ASize::three, AType::float_, false, 0);
-    m_vertex_array->enableAttribute(position_location);
+    m_vertex_array.bindAttribute(position_location, buffer_binding);
+    m_vertex_array.setAttribFormat(position_location, ASize::three, AType::float_, false, 0);
+    m_vertex_array.enableAttribute(position_location);
 
     // normals
     if (!normals.empty())
     {
         buffer_binding++;
-        m_vertex_array->bindVertexBuffer(buffer_binding, *m_buffer, normal_offset, sizeof(glm::vec3));
+        m_vertex_array.bindVertexBuffer(buffer_binding, m_buffer, normal_offset, sizeof(glm::vec3));
         const auto normal_location = vertex_normal_def.layout.location;
-        m_vertex_array->bindAttribute(normal_location, buffer_binding);
-        m_vertex_array->setAttribFormat(normal_location, ASize::three, AType::float_, false, 0);
-        m_vertex_array->enableAttribute(normal_location);
+        m_vertex_array.bindAttribute(normal_location, buffer_binding);
+        m_vertex_array.setAttribFormat(normal_location, ASize::three, AType::float_, false, 0);
+        m_vertex_array.enableAttribute(normal_location);
     }
 
     // uvs
     if (!uvs.empty())
     {
         buffer_binding++;
-        m_vertex_array->bindVertexBuffer(buffer_binding, *m_buffer, uv_offset, sizeof(glm::vec2));
+        m_vertex_array.bindVertexBuffer(buffer_binding, m_buffer, uv_offset, sizeof(glm::vec2));
         const auto uv_location = vertex_uv_def.layout.location;
-        m_vertex_array->bindAttribute(uv_location, buffer_binding);
-        m_vertex_array->setAttribFormat(uv_location, ASize::two, AType::float_, false, 0);
-        m_vertex_array->enableAttribute(uv_location);
+        m_vertex_array.bindAttribute(uv_location, buffer_binding);
+        m_vertex_array.setAttribFormat(uv_location, ASize::two, AType::float_, false, 0);
+        m_vertex_array.enableAttribute(uv_location);
     }
 
     m_draw_indexed = !indices.empty();
@@ -96,7 +96,7 @@ Mesh::Mesh(const std::vector<glm::vec3>& positions, const std::vector<glm::vec3>
         m_index_count = indices.size();
         m_index_buffer.type = IndexType::unsigned_int;
         m_index_buffer.offset = index_offset;
-        m_vertex_array->bindElementBuffer(*m_buffer);
+        m_vertex_array.bindElementBuffer(m_buffer);
     }
     else
     {
@@ -115,19 +115,19 @@ void Mesh::collectDrawCommands(const CommandCollector& collector) const
                                                            m_index_buffer.type,
                                                            m_index_buffer.offset,
                                                            m_instance_count),
-                              m_vertex_array.getHandle());
+                              m_vertex_array);
         else
             collector.emplace(DrawElementsCommand(m_draw_mode, m_index_count, m_index_buffer.type, m_index_buffer.offset),
-                              m_vertex_array.getHandle());
+                              m_vertex_array);
     }
     else
     {
         if (m_instance_count)
             collector.emplace(DrawArraysInstancedCommand(m_draw_mode, m_first_index, m_index_count, m_instance_count),
-                              m_vertex_array.getHandle());
+                              m_vertex_array);
         else
             collector.emplace(DrawArraysCommand(m_draw_mode, m_first_index, m_index_count),
-                              m_vertex_array.getHandle());
+                              m_vertex_array);
     }
 }
 

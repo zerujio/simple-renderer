@@ -5,7 +5,7 @@ option(GLFW_BUILD_DOCS "Build the GLFW documentation" OFF)
 option(GLFW_INSTALL "Generate installation target" OFF)
 add_subdirectory(glfw)
 
-# glutils (includes glad and glm)
+# GL (includes glad and glm)
 add_subdirectory(glutils-cpp)
 
 # stb_image
