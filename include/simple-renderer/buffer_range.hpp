@@ -14,7 +14,10 @@ namespace simple {
 class RBufferRange;
 class WBufferRange;
 
+enum class BufferAccess{ Read, Write, ReadWrite };
+
 /// Specifies a memory range within a buffer.
+
 class BufferRange
 {
 public:
@@ -53,11 +56,11 @@ public:
     /**
      *
      * @param relative_offset a byte relative_offset relative to the beginning of this range. If this value is greater than the size of
-     * *this, the result will be a zero-sized range with that starts and ends at this->getOffset() + this->getSize().
+     * *this, the result will be a zero-sized range with that starts and ends at this->getSize() + this->getSize().
      * @param size the size for the new range. If greater than this->getSize() - @p relative_offset, the result will be have
      * the expected relative_offset and a size of max(0, this-getSize() - @p relative_offset).
      * @return A new BufferRange object that equivalent to the intersection of *this and a range with relative_offset equal to
-     * this->getOffset() + @p relative_offset and size equal to @p size.
+     * this->getSize() + @p relative_offset and size equal to @p size.
      */
     [[nodiscard]]
     constexpr BufferRange subRange(offset_t relative_offset, size_t size) const noexcept
@@ -125,9 +128,9 @@ public:
     constexpr auto joinWith(RangeT other) const noexcept
     { return join(*this, other); }
 
-    static void copy(RBufferRange read_range, WBufferRange write_range);
-    static void copy(RBufferRange read_range, GL::BufferHandle write_buffer, offset_t write_offset);
-    static void copy(GL::BufferHandle read_buffer, offset_t read_offset, WBufferRange write_range);
+    static void copy(const RBufferRange& read_range, const WBufferRange& write_range);
+    static void copy(const RBufferRange& read_range, GL::BufferHandle write_buffer, offset_t write_offset);
+    static void copy(GL::BufferHandle read_buffer, offset_t read_offset, const WBufferRange& write_range);
 
     class MappedPtrDeleter final
     {
@@ -156,7 +159,7 @@ public:
     using BufferRange::BufferRange;
 
     /// copy contents of this range to another range of the same size.
-    inline void copyTo(WBufferRange destination_range) const;
+    inline void copyTo(const WBufferRange& destination_range) const;
 
     /// Copy the contents of this range into another buffer.
     inline void copyTo(GL::BufferHandle destination_buffer, std::uintptr_t write_offset) const;
@@ -175,7 +178,7 @@ public:
     using BufferRange::BufferRange;
 
     /// copy contents of another range into this range.
-    inline void copyFrom(RBufferRange source_range) const;
+    inline void copyFrom(const RBufferRange& source_range) const;
 
     /// copy contents of a buffer into this range.
     inline void copyFrom(GL::BufferHandle source_buffer, std::uintptr_t read_offset) const;
@@ -192,18 +195,19 @@ class RWBufferRange final : public RBufferRange, public WBufferRange
 {
 public:
     using RBufferRange::RBufferRange;
+    using WBufferRange::WBufferRange;
 
     /// Directly access the contents of the range through a read-write pointer.
     [[nodiscard]] std::unique_ptr<std::byte[], MappedPtrDeleter> map() const;
 };
 
-void RBufferRange::copyTo(WBufferRange destination_range) const
+void RBufferRange::copyTo(const WBufferRange& destination_range) const
 { copy(*this, destination_range); }
 
 void RBufferRange::copyTo(GL::BufferHandle destination_buffer, std::uintptr_t write_offset) const
 { copy(*this, destination_buffer, write_offset); }
 
-void WBufferRange::copyFrom(RBufferRange source_range) const
+void WBufferRange::copyFrom(const RBufferRange& source_range) const
 { copy(source_range, *this); }
 
 void WBufferRange::copyFrom(GL::BufferHandle source_buffer, std::uintptr_t read_offset) const

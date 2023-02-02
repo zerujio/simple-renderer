@@ -15,7 +15,7 @@ std::unique_ptr<std::byte[], BufferRange::MappedPtrDeleter> BufferRange::m_map(G
             MappedPtrDeleter(m_buffer)};
 }
 
-void BufferRange::copy(RBufferRange read_range, WBufferRange write_range)
+void BufferRange::copy(const RBufferRange& read_range, const WBufferRange& write_range)
 {
     if (read_range.getSize() != write_range.getSize())
         throw std::logic_error("can't copy between ranges of different size");
@@ -25,12 +25,12 @@ void BufferRange::copy(RBufferRange read_range, WBufferRange write_range)
                      read_range.m_size);
 }
 
-void BufferRange::copy(RBufferRange read_range, GL::BufferHandle write_buffer, BufferRange::offset_t write_offset)
+void BufferRange::copy(const RBufferRange& read_range, GL::BufferHandle write_buffer, BufferRange::offset_t write_offset)
 {
     GL::Buffer::copy(read_range.m_buffer, write_buffer, read_range.m_offset, write_offset, read_range.m_size);
 }
 
-void BufferRange::copy(GL::BufferHandle read_buffer, BufferRange::offset_t read_offset, WBufferRange write_range)
+void BufferRange::copy(GL::BufferHandle read_buffer, BufferRange::offset_t read_offset, const WBufferRange& write_range)
 {
     GL::Buffer::copy(read_buffer, write_range.m_buffer, read_offset, write_range.m_offset, write_range.m_size);
 }
