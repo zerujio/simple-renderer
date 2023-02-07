@@ -36,7 +36,7 @@ auto AllocationRegistry::m_findFreeBlock(AllocationRegistry::uintptr size) noexc
     return std::make_pair(it, offset);
 }
 
-AllocationRegistry::uintptr AllocationRegistry::allocate(AllocationRegistry::uintptr size)
+auto AllocationRegistry::tryAllocate(AllocationRegistry::uintptr size) -> std::optional<uintptr>
 {
     const auto [iter, offset] = m_findFreeBlock(size);
 
@@ -51,14 +51,22 @@ AllocationRegistry::uintptr AllocationRegistry::allocate(AllocationRegistry::uin
         *iter = {iter->getSize() - size, true};
     }
     else if (m_size - offset < size)
-        throw std::logic_error("allocation registry: out of space");
+        return {};
 
     m_blocks.insert(iter, {size, false});
 
     return offset;
 }
 
-void AllocationRegistry::deallocate(AllocationRegistry::uintptr offset)
+auto AllocationRegistry::allocate(uintptr size) -> uintptr
+{
+    const auto opt = tryAllocate(size);
+    if (!opt.has_value())
+        throw std::logic_error("allocation registry: out of space");
+    return *opt;
+}
+
+bool AllocationRegistry::tryDeallocate(AllocationRegistry::uintptr offset) noexcept
 {
     uintptr acc_offset = 0;
     auto iter = m_blocks.begin();
@@ -68,13 +76,20 @@ void AllocationRegistry::deallocate(AllocationRegistry::uintptr offset)
         if (acc_offset == offset)
         {
             iter->setIsFree(true);
-            return;
+            return true;
         }
 
         acc_offset += iter++->getSize();
     }
 
-    throw std::logic_error("allocation registry: invalid deallocation offset");
+    return false;
+}
+
+void AllocationRegistry::deallocate(uintptr offset)
+{
+    const bool succeeded = tryDeallocate(offset);
+    if (!succeeded)
+        throw std::logic_error("allocation registry: invalid deallocation offset");
 }
 
 } // simple

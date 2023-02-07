@@ -2,6 +2,7 @@
 #define PROCEDURALPLACEMENTLIB_ALLOCATION_REGISTRY_HPP
 
 #include <vector>
+#include <optional>
 
 namespace simple {
 
@@ -20,11 +21,17 @@ public:
     /// Create a registry that will keep track of @p size bytes of contiguous memory.
     explicit AllocationRegistry(uintptr size);
 
-    /// Register as used a block of memory of at least @p size bytes and returns its offset.
+    /// Register as used a block of memory of exactly @p size bytes and return its offset.
     [[nodiscard]] uintptr allocate(uintptr size);
+
+    /// Same as allocate(), but returns an empty optional on failure instead of throwing an exception.
+    [[nodiscard]] std::optional<uintptr> tryAllocate(uintptr size);
 
     /// Register as unused a previously allocated block of memory that starts at @p offset.
     void deallocate(uintptr offset);
+
+    /// Same as deallocate(), but returns false on failure instead of throwing an axception.
+    bool tryDeallocate(uintptr offset) noexcept;
 
 private:
     struct Block;
