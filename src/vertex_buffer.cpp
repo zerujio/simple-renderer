@@ -1,4 +1,4 @@
-#include "vertex_buffer.hpp"
+#include "simple-renderer/vertex_buffer.hpp"
 
 namespace simple {
 
@@ -26,8 +26,13 @@ void VertexAttributeSequence::clear()
 
 ///////////////////////////////////////////////// Vertex buffer ////////////////////////////////////////////////////////
 
+VertexBuffer::VertexBuffer(VertexBuffer::size_uint size) : m_allocator(size), m_size(size)
+{
+    m_buffer.allocateImmutable(size, GL::Buffer::StorageFlags::dynamic_storage);
+}
+
 template<typename Initializer>
-const VertexBuffer::SectionDescriptor *
+const VertexBufferSectionDescriptor *
 VertexBuffer::m_tryCreateSection(const Initializer &initializer, VertexAttributeSequence &&attribute_sequence,
                                  VertexBuffer::size_uint vertex_count)
 {
@@ -43,7 +48,7 @@ VertexBuffer::m_tryCreateSection(const Initializer &initializer, VertexAttribute
 }
 
 template<typename Initializer>
-const VertexBuffer::SectionDescriptor& VertexBuffer::m_createSection(const Initializer &initializer,
+const VertexBufferSectionDescriptor& VertexBuffer::m_createSection(const Initializer &initializer,
                                                                      VertexAttributeSequence &&attribute_sequence,
                                                                      VertexBuffer::size_uint vertex_count)
 {
@@ -78,21 +83,21 @@ struct InitializeFromHost final
     }
 };
 
-const VertexBuffer::SectionDescriptor &VertexBuffer::addAttributeData(void *vertex_data,
-                                                                      VertexBuffer::size_uint vertex_count,
-                                                                      VertexAttributeSequence sequence)
+const VertexBufferSectionDescriptor &VertexBuffer::addAttributeData(const void *vertex_data,
+                                                                    VertexBuffer::size_uint vertex_count,
+                                                                    VertexAttributeSequence sequence)
 {
     return m_createSection(InitializeFromHost{vertex_data}, std::move(sequence), vertex_count);
 }
 
-const VertexBuffer::SectionDescriptor &
+const VertexBufferSectionDescriptor &
 VertexBuffer::addAttributeData(GL::BufferHandle read_buffer, VertexBuffer::size_uint read_offset,
                                VertexBuffer::size_uint vertex_count, VertexAttributeSequence sequence)
 {
     return m_createSection(InitializeFromDevice{read_buffer, read_offset}, std::move(sequence), vertex_count);
 }
 
-const VertexBuffer::SectionDescriptor &
+const VertexBufferSectionDescriptor &
 VertexBuffer::addAttributeData(const VertexBuffer &vertex_buffer, VertexBuffer::size_uint section_index)
 {
     const auto& descriptor = vertex_buffer.getSectionDescriptor(section_index);
@@ -100,21 +105,21 @@ VertexBuffer::addAttributeData(const VertexBuffer &vertex_buffer, VertexBuffer::
                             descriptor.attributes);
 }
 
-const VertexBuffer::SectionDescriptor *
-VertexBuffer::tryAddAttributeData(void *vertex_data, VertexBuffer::size_uint vertex_count,
+const VertexBufferSectionDescriptor *
+VertexBuffer::tryAddAttributeData(const void *vertex_data, VertexBuffer::size_uint vertex_count,
                                   VertexAttributeSequence attributes)
 {
     return m_tryCreateSection(InitializeFromHost{vertex_data}, std::move(attributes), vertex_count);
 }
 
-const VertexBuffer::SectionDescriptor *
+const VertexBufferSectionDescriptor *
 VertexBuffer::tryAddAttributeData(GL::BufferHandle read_buffer, VertexBuffer::size_uint read_offset,
                                   VertexBuffer::size_uint vertex_count, VertexAttributeSequence attributes)
 {
     return m_tryCreateSection(InitializeFromDevice{read_buffer, read_offset}, std::move(attributes), vertex_count);
 }
 
-const VertexBuffer::SectionDescriptor *
+const VertexBufferSectionDescriptor *
 VertexBuffer::tryAddAttributeData(const VertexBuffer &vertex_buffer, VertexBuffer::size_uint section_index)
 {
     const auto& descriptor = getSectionDescriptor(section_index);
@@ -122,7 +127,7 @@ VertexBuffer::tryAddAttributeData(const VertexBuffer &vertex_buffer, VertexBuffe
                                descriptor.attributes);
 }
 
-void VertexBuffer::updateAttributeData(VertexBuffer::size_uint index, void *data) const
+void VertexBuffer::updateAttributeData(VertexBuffer::size_uint index, const void *data) const
 {
     const auto& descriptor = getSectionDescriptor(index);
     m_buffer.write(descriptor.buffer_offset, descriptor.getSize(), data);

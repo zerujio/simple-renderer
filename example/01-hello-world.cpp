@@ -86,8 +86,9 @@ auto main() -> int
 
         simple::ShaderProgram program {vert_src, frag_src}; // compile shaders
 
-        simple::Mesh mesh {Cube::vertex_positions, Cube::vertex_normals, Cube::vertex_uvs, Cube::indices};
-        mesh.setDrawMode(simple::DrawMode::triangles);
+        simple::ArrayMesh mesh {Cube::vertex_positions, Cube::vertex_normals, Cube::vertex_uvs};
+        //simple::Mesh mesh {Cube::vertex_positions, Cube::vertex_normals, Cube::vertex_uvs, Cube::indices};
+        mesh.setDrawMode(simple::DrawMode::line_loop);
 
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();

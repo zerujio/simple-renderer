@@ -34,7 +34,25 @@ public:
     bool tryDeallocate(uintptr offset) noexcept;
 
 private:
-    struct Block;
+
+    class Block
+    {
+    public:
+        // here an alignment of at least 2 is assumed
+        constexpr Block(uintptr offset, bool is_used) noexcept : m_tagged_size((offset & s_size_mask) | is_used) {}
+
+        [[nodiscard]] constexpr bool isFree() const noexcept { return m_tagged_size & s_tag_mask; }
+        [[nodiscard]] constexpr uintptr getSize() const noexcept { return m_tagged_size & s_size_mask; }
+
+        constexpr void setIsFree(bool tag) noexcept { m_tagged_size = getSize() | tag; }
+        constexpr void setSize(uintptr offset) noexcept { m_tagged_size = (offset & s_size_mask) | isFree(); }
+
+    private:
+        static constexpr uintptr s_tag_mask = 0x1;
+        static constexpr uintptr s_size_mask = ~s_tag_mask;
+
+        uintptr m_tagged_size;
+    };
 
     [[nodiscard]] auto m_findFreeBlock(uintptr size) noexcept;
 

@@ -1,7 +1,7 @@
 #ifndef PROCEDURALPLACEMENTLIB_VERTEX_BUFFER_HPP
 #define PROCEDURALPLACEMENTLIB_VERTEX_BUFFER_HPP
 
-#include "simple-renderer/allocation_registry.hpp"
+#include "allocation_registry.hpp"
 
 #include "glutils/buffer.hpp"
 #include "glutils/vertex_attrib_utils.hpp"
@@ -11,19 +11,32 @@
 
 namespace simple {
 
+/// Specifies the data type and location of an attribute.
+struct VertexAttributeDescriptor final
+{
+    using size_uint = GLuint;
+
+    /// base data type of the attribute (int, float, etc.)
+    GL::VertexAttributeBaseType base_type {GL::VertexAttributeBaseType::_float};
+
+    /// vector element count (1, 2, 3 or 4).
+    GL::VertexAttributeLength length {0};
+
+    /// offset relative to the start of the attribute sequence
+    size_uint relative_offset {0};
+
+    /// convert double and integer base types to floating point.
+    bool float_cast {false};
+
+    /// if float_cast is true, convert integers via normalization rather than a C-style cast.
+    bool normalized {false};
+};
+
 /// Specifies the layout of a set of interleaved vertex attributes.
 class VertexAttributeSequence final
 {
 public:
     using size_uint = GLuint;
-
-    /// Specifies the data type and location of an attribute.
-    struct AttributeDescriptor final
-    {
-        GL::VertexAttributeBaseType base_type;    //!< base data type of the attribute (int, float, etc.)
-        GL::VertexAttributeLength length;         //!< vector element count (1, 2, 3 or 4).
-        size_uint relative_offset;                //!< offset relative to the start of the attribute sequence
-    };
 
     /// Get the stride (i.e. the size) of the whole attribute sequence, including any padding.
     [[nodiscard]] size_uint getStride() const
@@ -34,15 +47,15 @@ public:
     { return m_attributes.size(); }
 
     /// Read-only access to the underlying container.
-    [[nodiscard]] const std::vector<AttributeDescriptor> &getAttributes() const
+    [[nodiscard]] const std::vector<VertexAttributeDescriptor> &getAttributes() const
     { return m_attributes; }
 
     /// Get the attribute at the specified index, with bounds checking.
-    [[nodiscard]] const AttributeDescriptor &getAttribute(size_uint index) const
+    [[nodiscard]] const VertexAttributeDescriptor &getAttribute(size_uint index) const
     { return m_attributes.at(index); }
 
     /// Access the attribute format and offset at the given index, without bounds checking.
-    [[nodiscard]] const AttributeDescriptor &operator[](size_uint index) const
+    [[nodiscard]] const VertexAttributeDescriptor &operator[](size_uint index) const
     { return m_attributes[index]; }
 
     /// constant iterator to the first element of the underlying container.
@@ -70,7 +83,25 @@ public:
 
 private:
     size_uint m_stride;
-    std::vector<AttributeDescriptor> m_attributes;
+    std::vector<VertexAttributeDescriptor> m_attributes;
+};
+
+/// Specifies the contents of a section of a vertex buffer.
+struct VertexBufferSectionDescriptor final
+{
+    using size_uint = std::uint64_t;
+
+    template<typename Attributes>
+    VertexBufferSectionDescriptor(Attributes &&attr, size_uint v_count, size_uint offset)
+            : attributes(std::forward<Attributes>(attr)), vertex_count(v_count), buffer_offset(offset)
+    {}
+
+    [[nodiscard]] size_uint getSize() const
+    { return vertex_count * attributes.getStride(); }
+
+    VertexAttributeSequence attributes; //!< the sequence of attributes that composes each vertex.
+    size_uint vertex_count;             //!< number of vertices (instances of the attribute sequence)
+    size_uint buffer_offset;            //!< byte offset of the data, relative to the start of the buffer.
 };
 
 /// Wraps a (non-resizable) GL buffer object that contains vertex attributes.
@@ -78,22 +109,6 @@ class VertexBuffer final
 {
 public:
     using size_uint = std::uint64_t;
-
-    /// Specifies the contents of a section of the buffer.
-    struct SectionDescriptor final
-    {
-        template<typename Attributes>
-        SectionDescriptor(Attributes &&attr, size_uint v_count, size_uint offset)
-                : attributes(std::forward<Attributes>(attr)), vertex_count(v_count), buffer_offset(offset)
-        {}
-
-        [[nodiscard]] size_uint getSize() const
-        { return vertex_count * attributes.getStride(); }
-
-        VertexAttributeSequence attributes; //!< the sequence of attributes that composes each vertex.
-        size_uint vertex_count;             //!< number of vertices (instances of the attribute sequence)
-        size_uint buffer_offset;            //!< byte offset of the data, relative to the start of the buffer.
-    };
 
     /// Construct a vertex buffer with fixed storage size.
     explicit VertexBuffer(size_uint size);
@@ -111,15 +126,15 @@ public:
     { return m_sections.size(); }
 
     /// Access a container with descriptors for the contents of the buffer.
-    [[nodiscard]] const std::vector<SectionDescriptor> &getSectionDescriptors() const noexcept
+    [[nodiscard]] const std::vector<VertexBufferSectionDescriptor> &getSectionDescriptors() const noexcept
     { return m_sections; }
 
     /// Get the descriptor for the buffer section with the given index, with bounds checking.
-    [[nodiscard]] const SectionDescriptor &getSectionDescriptor(size_uint index) const noexcept
+    [[nodiscard]] const VertexBufferSectionDescriptor &getSectionDescriptor(size_uint index) const noexcept
     { return m_sections.at(index); }
 
     /// Directly access the descriptor for the buffer section with the given index, without bounds checking.
-    [[nodiscard]] const SectionDescriptor &operator[](size_uint index) const noexcept
+    [[nodiscard]] const VertexBufferSectionDescriptor &operator[](size_uint index) const noexcept
     { return m_sections[index]; }
 
     /// Copy vertex data from host memory into the buffer, creating a new section.
@@ -131,11 +146,11 @@ public:
      * their offset may change.
      * @param vertex_data A pointer to vertex data to copy into the buffer.
      * @param vertex_count The number of elements in @p vertex_data .
-     * @param vertex_attrib_sequence The format of each element in @p vertex_data .
-     * @return the SectionDescriptor for the buffer section that contains the data that was copied.
+     * @param sequence The format of each element in @p vertex_data .
+     * @return the VertexBufferSectionDescriptor for the buffer section that contains the data that was copied.
      */
-    const SectionDescriptor &addAttributeData(void *vertex_data, size_uint vertex_count,
-                                              VertexAttributeSequence vertex_attrib_sequence);
+    const VertexBufferSectionDescriptor &addAttributeData(const void *vertex_data, size_uint vertex_count,
+                                                          VertexAttributeSequence sequence);
 
     /// Copy vertex data from a buffer into the vertex buffer, creating a new section.
     /**
@@ -150,21 +165,23 @@ public:
      * @param vertex_attribute_sequence format of the data to be copied.
      * @return
      */
-    const SectionDescriptor &addAttributeData(GL::BufferHandle read_buffer, size_uint read_offset,
-                                              size_uint vertex_count,
-                                              VertexAttributeSequence vertex_attribute_sequence);
+    const VertexBufferSectionDescriptor &addAttributeData(GL::BufferHandle read_buffer, size_uint read_offset,
+                                                          size_uint vertex_count,
+                                                          VertexAttributeSequence vertex_attribute_sequence);
 
     /// Copy vertex data from another vertex buffer.
-    const SectionDescriptor &addAttributeData(const VertexBuffer &vertex_buffer, size_uint section_index);
+    const VertexBufferSectionDescriptor &addAttributeData(const VertexBuffer &vertex_buffer, size_uint section_index);
 
     /// Same as addAttributeData() but returns nullptr on failure instead of throwing an exception.
-    const SectionDescriptor *tryAddAttributeData(void *vertex_data, size_uint vertex_count,
-                                                 VertexAttributeSequence attributes);
+    const VertexBufferSectionDescriptor *tryAddAttributeData(const void *vertex_data, size_uint vertex_count,
+                                                             VertexAttributeSequence attributes);
 
-    const SectionDescriptor *tryAddAttributeData(GL::BufferHandle read_buffer, size_uint read_offset,
-                                                 size_uint vertex_count, VertexAttributeSequence attributes);
+    const VertexBufferSectionDescriptor *tryAddAttributeData(GL::BufferHandle read_buffer, size_uint read_offset,
+                                                             size_uint vertex_count,
+                                                             VertexAttributeSequence attributes);
 
-    const SectionDescriptor *tryAddAttributeData(const VertexBuffer &vertex_buffer, size_uint section_index);
+    const VertexBufferSectionDescriptor *
+    tryAddAttributeData(const VertexBuffer &vertex_buffer, size_uint section_index);
 
     /// Update the contents of a data section, without changing the format or number of vertices.
     /**
@@ -173,7 +190,7 @@ public:
      * @param index the index of the section to be updated
      * @param data the data to update the section with. Must have the same size and format as the section being updated.
      */
-    void updateAttributeData(size_uint index, void *data) const;
+    void updateAttributeData(size_uint index, const void *data) const;
 
     void updateAttributeData(size_uint index, GL::BufferHandle read_buffer,
                              size_uint read_offset) const;
@@ -186,23 +203,26 @@ public:
      */
     void discardAttributeData(size_uint index);
 
+    [[nodiscard]] auto begin() const { return m_sections.begin(); }
+    [[nodiscard]] auto end() const { return m_sections.end(); }
+
 private:
     template<typename Initializer>
     [[nodiscard]]
-    const SectionDescriptor *m_tryCreateSection(const Initializer &initializer,
-                                                VertexAttributeSequence &&attribute_sequence,
-                                                size_uint vertex_count);
+    const VertexBufferSectionDescriptor *m_tryCreateSection(const Initializer &initializer,
+                                                            VertexAttributeSequence &&attribute_sequence,
+                                                            size_uint vertex_count);
 
     template<typename Initializer>
     [[nodiscard]]
-    const SectionDescriptor &m_createSection(const Initializer &initializer,
-                                             VertexAttributeSequence &&attribute_sequence,
-                                             size_uint vertex_count);
+    const VertexBufferSectionDescriptor &m_createSection(const Initializer &initializer,
+                                                         VertexAttributeSequence &&attribute_sequence,
+                                                         size_uint vertex_count);
 
     GL::Buffer m_buffer;
     size_uint m_size;
     AllocationRegistry m_allocator;
-    std::vector<SectionDescriptor> m_sections;
+    std::vector<VertexBufferSectionDescriptor> m_sections;
 };
 
 } // simple

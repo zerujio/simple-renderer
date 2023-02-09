@@ -1,4 +1,5 @@
-add_library(simple-renderer STATIC
+add_library(simple-renderer
+        STATIC
         renderer.cpp
         shader_program.cpp
         mesh.cpp
@@ -6,7 +7,10 @@ add_library(simple-renderer STATIC
         camera.cpp
         draw_command.cpp
         command_queue.cpp
-        buffer_range.cpp)
+        instanced_mesh.cpp
+        vertex_buffer.cpp
+        buffer_range.cpp
+        allocation_registry.cpp)
+
 target_include_directories(simple-renderer PUBLIC ${PROJECT_SOURCE_DIR}/include)
-target_link_libraries(simple-renderer
-        PUBLIC glm glutils)
+target_link_libraries(simple-renderer PUBLIC glm glutils)
