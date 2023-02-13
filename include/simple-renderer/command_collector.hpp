@@ -23,7 +23,7 @@ public:
     template<typename CommandType>
     void emplace(CommandType &&command, GL::VertexArrayHandle vertex_array) const
     {
-        m_command_queue.template emplace<std::remove_reference_t<CommandType>>(std::forward<CommandType>(command),
+        m_command_queue.template emplace<std::decay_t<CommandType>>(std::forward<CommandType>(command),
                 std::tuple_cat(m_bound_args, std::make_tuple(vertex_array)));
     }
 

@@ -10,180 +10,77 @@
 
 namespace simple {
 
-Mesh::BufferBindingRef
-Mesh::m_assignBufferBinding(GL::BufferHandle buffer, std::uint64_t offset, std::uint32_t stride, std::uint32_t divisor)
+Mesh::Mesh(VertexDataInitializer<glm::vec3> positions, VertexDataInitializer<glm::vec3> normals,
+           VertexDataInitializer<glm::vec2> uvs, VertexDataInitializer<unsigned int> indices)
+        : m_vertex_buffer(positions.sizeBytes() + normals.sizeBytes() + uvs.sizeBytes() + indices.sizeBytes()),
+        m_index_count(positions.size), m_use_index_buffer(indices.size > 0)
 {
-    const auto unused_binding_it = std::find_if(m_binding_points.begin(), m_binding_points.end(),
-                                                [](const BufferBinding &binding)
-                                                { return !binding.isReferenced(); });
+    if (!positions)
+        throw std::logic_error("no position data");
 
-    if (unused_binding_it != m_binding_points.end())
-        return unused_binding_it;
+    if (normals.size != 0 && positions.size != normals.size)
+        throw std::logic_error("different number of positions and normals");
 
-    return m_binding_points.insert(unused_binding_it, {buffer, offset, stride, divisor});
-}
+    if (uvs.size != 0 && positions.size != uvs.size)
+        throw std::logic_error("different number of positions and UVs");
 
-Mesh::BufferBindingRef
-Mesh::m_bindVertexBuffer(const VertexBuffer &vertex_buffer, const VertexBufferSectionDescriptor &section,
-                         GLuint divisor)
-{
-    // check for an existing binding for this buffer and section
+    // indices
+    if (indices.size)
     {
-        const auto existing_binding_it = std::find(m_binding_points.begin(), m_binding_points.end(),
-                                                   std::make_tuple(vertex_buffer.getBufferHandle(),
-                                                                   section.buffer_offset,
-                                                                   section.attributes.getStride(),
-                                                                   divisor));
-
-        if (existing_binding_it != m_binding_points.end())
-            return existing_binding_it;
+        const auto uint_attribute = VertexAttributeSequence().addAttribute<GLuint>();
+        const auto &descriptor = m_vertex_buffer.addAttributeData(indices.data, indices.size, uint_attribute);
+        m_index_count = indices.size;
+        m_index_buffer_offset = descriptor.buffer_offset;
+        m_vertex_specification.bindIndexBuffer(m_vertex_buffer);
+    }
+    else
+    {
+        m_first_index = 0;
+        m_index_count = positions.size;
     }
 
-    // assign a new binding
-    const auto new_binding_ref = m_assignBufferBinding(vertex_buffer.getBufferHandle(), section.buffer_offset,
-                                                       section.attributes.getStride(), divisor);
-    const auto new_binding_index = m_getBufferBindingIndex(new_binding_ref);
-
-    m_vertex_array.bindVertexBuffer(new_binding_index, vertex_buffer.getBufferHandle(), section.buffer_offset,
-                                    section.attributes.getStride());
-    m_vertex_array.setBindingDivisor(new_binding_index, divisor);
-
-    return new_binding_ref;
-}
-
-Mesh::BufferBindingIndex Mesh::m_getBufferBindingIndex(BufferBindingRef ref) const
-{
-    return ref.getIterator() - m_binding_points.begin();
-}
-
-void Mesh::m_bindAttribute(std::uint32_t attribute_location, BufferBindingRef binding_point,
-                           const VertexAttributeDescriptor& attribute)
-{
-    const auto binding_index = m_getBufferBindingIndex(binding_point);
-
-    m_vertex_array.bindAttribute(attribute_location, binding_index);
-
-    using BaseType = GL::VertexAttributeBaseType;
-    switch (attribute.base_type)
+    // vertex positions
     {
-        case BaseType::_double:
-            if (!attribute.float_cast)
-            {
-                m_vertex_array.setAttribLFormat(attribute_location, attribute.length, attribute.base_type,
-                                                attribute.relative_offset);
-                break;
-            }
-        case BaseType::_float:
-        case BaseType::_half_float:
-        case BaseType::_fixed:
-            m_vertex_array.setAttribFormat(attribute_location, attribute.length, attribute.base_type,
-                                           false, attribute.relative_offset);
-            break;
-        default:
-            if (attribute.float_cast)
-                m_vertex_array.setAttribFormat(attribute_location, attribute.length, attribute.base_type,
-                                               attribute.normalized, attribute.relative_offset);
-            else
-                m_vertex_array.setAttribIFormat(attribute_location, attribute.length, attribute.base_type,
-                                                attribute.relative_offset);
-            break;
+        const auto attribute = VertexAttributeSequence().addAttribute<glm::vec3>();
+        const auto &descriptor = m_vertex_buffer.addAttributeData(positions.data, positions.size, attribute);
+        m_vertex_specification.bindAttributes(m_vertex_buffer, descriptor,
+                                              std::array{vertex_position_def.layout.location});
     }
 
-    m_vertex_array.enableAttribute(attribute_location);
-
-    if (attribute_location >= m_attribute_bindings.size())
-        m_attribute_bindings.resize(attribute_location + 1);
-
-    m_attribute_bindings[attribute_location] = binding_point;
-}
-
-void Mesh::m_unbindAttribute(std::uint32_t attribute_location)
-{
-    if (attribute_location >= m_attribute_bindings.size())
-        return;
-
-    auto& opt = m_attribute_bindings[attribute_location];
-    if (!opt)
-        return;
-
-    m_vertex_array.disableAttribute(attribute_location);
-    opt.reset();
-}
-
-void Mesh::m_bindAttributes(const VertexBuffer &vertex_buffer, const VertexBufferSectionDescriptor &section,
-                            int *locations, std::size_t num_locations, GLuint instance_divisor)
-{
-    if (section.attributes.getAttributeCount() != num_locations)
-        throw std::logic_error("number of locations specified doesn't match number of attributes in vertex buffer");
-
-    const auto binding_ref = m_bindVertexBuffer(vertex_buffer, section, instance_divisor);
-
-    for (const auto &attribute_descriptor: section.attributes)
-        m_bindAttribute(*locations++, binding_ref, attribute_descriptor);
-}
-
-template<typename T>
-std::size_t getVectorByteSize(const std::vector<T> &vector)
-{
-    return vector.size() * sizeof(T);
-}
-
-template<typename T>
-GLintptr copyToByteArray(const std::vector<T> &data, std::vector<std::byte> &byte_array)
-{
-    const auto offset = byte_array.size();
-    const auto size = getVectorByteSize(data);
-
-    if (size)
+    // vertex normals
+    if (normals)
     {
-        byte_array.resize(byte_array.size() + size);
-        auto ptr = reinterpret_cast<T *>(&byte_array[offset]);
-        for (const auto &value: data)
-            *ptr++ = value;
+        const auto attribute = VertexAttributeSequence().addAttribute<glm::vec3>();
+        const auto &descriptor = m_vertex_buffer.addAttributeData(normals.data, normals.size, attribute);
+        m_vertex_specification.bindAttributes(m_vertex_buffer, descriptor,
+                                              std::array{vertex_normal_def.layout.location});
     }
 
-    return static_cast<GLintptr>(offset);
-}
-
-ArrayMesh::ArrayMesh(const glm::vec3 *position_data, std::size_t position_count, const glm::vec3 *normal_data,
-                     std::size_t normal_count, const glm::vec2 *uv_data, std::size_t uv_count)
-        : m_vertex_buffer((position_count + normal_count) * sizeof(glm::vec3) + uv_count * sizeof(glm::vec2)),
-          m_vertex_count(static_cast<GLint>(position_count))
-{
-    if (!position_data or !position_count)
-        throw std::logic_error("no vertex position data");
-
-    m_bindAttributes(m_vertex_buffer,
-                     m_vertex_buffer.addAttributeData(position_data, position_count,
-                                                      VertexAttributeSequence().addAttribute<glm::vec3>()),
-                     std::array<GLint, 1>{vertex_position_def.layout.location});
-
-    if (normal_data)
+    // vertex texture coordinates
+    if (uvs)
     {
-        if (normal_count != position_count)
-            throw std::logic_error("position and normal vertex count mismatch");
-
-        const auto & section_descriptor = m_vertex_buffer.addAttributeData(normal_data, normal_count,
-                                                                           VertexAttributeSequence()
-                                                                           .addAttribute<glm::vec3>());
-        m_bindAttributes(m_vertex_buffer, section_descriptor, std::array<GLint, 1>{vertex_normal_def.layout.location});
-    }
-
-    if (uv_data)
-    {
-        if (uv_count != position_count)
-            throw std::logic_error("position and uv vertex count mismatch");
-
-        const auto &section_descriptor = m_vertex_buffer.addAttributeData(uv_data, uv_count,
-                                                                          VertexAttributeSequence()
-                                                                          .addAttribute<glm::vec2>());
-        m_bindAttributes(m_vertex_buffer, section_descriptor, std::array<GLint, 1>{vertex_uv_def.layout.location});
+        const auto attribute = VertexAttributeSequence().addAttribute<glm::vec2>();
+        const auto &descriptor = m_vertex_buffer.addAttributeData(uvs.data, uvs.size, attribute);
+        m_vertex_specification.bindAttributes(m_vertex_buffer, descriptor,
+                                              std::array{vertex_uv_def.layout.location});
     }
 }
 
-void ArrayMesh::collectDrawCommands(const Drawable::CommandCollector &collector) const
+void Mesh::collectDrawCommands(const Drawable::CommandCollector &collector) const
 {
-    emplaceDrawCommand(collector, DrawArraysCommand(getDrawMode(), 0, m_vertex_count));
+    if (isIndexed())
+        m_emplaceDrawCommands(collector, m_createDrawElementsCommand());
+    else
+        m_emplaceDrawCommands(collector, m_createDrawArraysCommand());
 }
 
+DrawElementsCommand Mesh::m_createDrawElementsCommand() const
+{
+    return {m_draw_mode, m_index_count, IndexType::unsigned_int, m_index_buffer_offset};
+}
+
+DrawArraysCommand Mesh::m_createDrawArraysCommand() const
+{
+    return {m_draw_mode, m_first_index, m_index_count};
+}
 } // simple

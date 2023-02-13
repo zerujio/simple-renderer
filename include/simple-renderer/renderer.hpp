@@ -25,6 +25,8 @@ namespace simple {
 class Renderer
 {
 public:
+    Renderer();
+
     /**
      * @brief enqueue a draw command.
      * @param program The shader program to draw with. The reference must remain valid until finishFrame is called.

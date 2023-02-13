@@ -1,11 +1,12 @@
 #ifndef PROCEDURALPLACEMENTLIB_INSTANCED_MESH_HPP
 #define PROCEDURALPLACEMENTLIB_INSTANCED_MESH_HPP
 
-#include "drawable.hpp"
+#include "mesh.hpp"
 
 namespace simple {
 
-class InstancedMesh : public simple::Drawable
+
+class InstancedMeshBase
 {
 public:
 

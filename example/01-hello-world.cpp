@@ -4,10 +4,7 @@
 
 #include <GLFW/glfw3.h>
 
-#include <glm/gtc/matrix_transform.hpp>
-
 #include <iostream>
-#include <cmath>
 
 struct Cube {
     static const std::vector<glm::vec3> vertex_positions;
@@ -35,15 +32,22 @@ void updateResolution(GLFWwindow *window, int width, int height)
                                                          data->camera_near, data->camera_far));
 }
 
-auto main() -> int
+void glfwErrorCallback(int error_code, const char* signature)
 {
+    std::cout << "GLFW Error " << error_code << ": " << signature << "\n";
+}
+
+int main()
+{
+    glfwSetErrorCallback(glfwErrorCallback);
+
     glfwInit();
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);   // create an OpenGL context with debug capabilities
+
     glm::ivec2 window_size {1024, 768};
-    auto window = glfwCreateWindow(window_size.x, window_size.y, "Hello world!", nullptr, nullptr);
+    const auto window = glfwCreateWindow(window_size.x, window_size.y, "Hello world!", nullptr, nullptr);
     if (!window) {
         std::cerr << "window creation failed" << std::endl;
-        return -1;
     }
 
     glfwMakeContextCurrent(window);
@@ -58,17 +62,40 @@ auto main() -> int
 
     // Shaders are GLSL code.
     // proj_matrix, view_matrix and model_matrix are built-in uniforms (See ShaderProgram).
-    auto vert_src = R"glsl(
+    constexpr auto vert_src = R"glsl(
+    out vec3 f_normal;
+    out vec3 f_position;
+
     void main()
     {
         gl_Position = proj_matrix * view_matrix * model_matrix * vec4(vertex_position, 1.0f);
+        f_position = vec3(model_matrix * vec4(vertex_position, 1.0f));
+        f_normal = mat3(transpose(inverse(model_matrix))) * vertex_normal;
     }
     )glsl";
 
-    auto frag_src = R"glsl(
+    constexpr auto frag_src = R"glsl(
+    in vec3 f_normal;
+    in vec3 f_position;
+
+    const vec3 light_color      = {1., 1., 1.};
+    const vec3 light_direction  = {-1., -1., 0.};
+    const vec3 view_position    = {1., 1., 1.};
+    const float ambient_light_intensity     = 0.1f;
+    const float specular_light_intensity    = 0.5f;
+
     void main()
     {
-        frag_color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        const vec3 normal = normalize(-f_normal);
+        const float diffuse_light_intensity = max(dot(normal, light_direction), 0.f);
+
+        const vec3 view_direction = normalize(view_position - f_position);
+        const vec3 reflect_direction = reflect(light_direction, normal);
+        const float spec = pow(max(dot(view_direction, reflect_direction), 0.f), 32);
+
+        const vec3 color_sum = (ambient_light_intensity + diffuse_light_intensity + specular_light_intensity * spec)
+                                * light_color;
+        frag_color = vec4(color_sum, 1.0f);
     }
     )glsl";
 
@@ -86,15 +113,17 @@ auto main() -> int
 
         simple::ShaderProgram program {vert_src, frag_src}; // compile shaders
 
-        simple::ArrayMesh mesh {Cube::vertex_positions, Cube::vertex_normals, Cube::vertex_uvs};
-        //simple::Mesh mesh {Cube::vertex_positions, Cube::vertex_normals, Cube::vertex_uvs, Cube::indices};
-        mesh.setDrawMode(simple::DrawMode::line_loop);
+        simple::Mesh mesh {Cube::vertex_positions, Cube::vertex_normals, Cube::vertex_uvs, Cube::indices};
 
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
-            glm::mat4 transform{glm::rotate(glm::mat4(1.0f), float(glfwGetTime()), {0.0f, 1.0f, 0.0f})};
+
+            constexpr float angular_v = 0.75f;
+            glm::mat4 transform{glm::rotate(glm::mat4(1.0f), float(glfwGetTime()) * angular_v, {0.0f, 1.0f, 0.0f})};
+
             renderer.draw(mesh, program, transform);
             renderer.finishFrame(camera);
+
             glfwSwapBuffers(window);
         }
         // WARNING:
@@ -143,26 +172,32 @@ const std::vector<glm::vec3> Cube::vertex_positions
 
 const std::vector<glm::vec3> Cube::vertex_normals
 {
+        // face 0
         { .0, .0,-1.},
         { .0, .0,-1.},
         { .0, .0,-1.},
         { .0, .0,-1.},
+        // face 1
         { .0, .0, 1.},
         { .0, .0, 1.},
         { .0, .0, 1.},
         { .0, .0, 1.},
+        // face 2
         { 0., 1., 0.},
         { 0., 1., 0.},
         { 0., 1., 0.},
         { 0., 1., 0.},
+        // face 3
         { 0.,-1., 0.},
         { 0.,-1., 0.},
         { 0.,-1., 0.},
         { 0.,-1., 0.},
+        // face 4
         { 1., 0., 0.},
         { 1., 0., 0.},
         { 1., 0., 0.},
         { 1., 0., 0.},
+        // face 5
         {-1., 0., 0.},
         {-1., 0., 0.},
         {-1., 0., 0.},
@@ -171,26 +206,32 @@ const std::vector<glm::vec3> Cube::vertex_normals
 
 const std::vector<glm::vec2> Cube::vertex_uvs
 {
+        // face 0
         {1., 0.},
         {1., 1.},
         {0., 0.},
         {0., 1.},
+        // face 1
         {1., 0.},
         {1., 1.},
         {0., 0.},
         {0., 1.},
+        // face 2
         {1., 0.},
         {1., 1.},
         {0., 0.},
         {0., 1.},
+        // face 3
         {1., 0.},
         {1., 1.},
         {0., 0.},
         {0., 1.},
+        // face 4
         {1., 0.},
         {1., 1.},
         {0., 0.},
         {0., 1.},
+        // face 5
         {1., 0.},
         {1., 1.},
         {0., 0.},
