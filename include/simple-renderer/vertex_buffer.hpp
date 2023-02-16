@@ -157,8 +157,7 @@ public:
      * This function copies @p vertex_count * @p vertex_attribute_sequence.getStride() bytes from @p read_buffer to
      * the vertex buffer, starting at @p read_offset
      *
-     * References to section descriptors and the corresponding buffer sections remain valid. All existing sections
-     * retain their format and vertex count, but their offset may change.
+     * References to section descriptors and the corresponding buffer sections remain valid.
      * @param read_buffer a object buffer to copy from.
      * @param read_offset a byte offset into @p read_buffer .
      * @param vertex_count number of elements to copy.

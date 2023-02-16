@@ -7,6 +7,7 @@
 #include "GLFW/glfw3.h"
 
 #include <iostream>
+#include <array>
 
 struct {
     float fov = glm::pi<float>() / 2.0f;
@@ -44,7 +45,7 @@ in vec3 f_position;
 
 const vec3 light_color      = {1., 1., 1.};
 const vec3 light_direction  = {-1., -1., 0.};
-const vec3 view_position    = {1., 1., 1.};
+const vec3 view_position    = {5., 5., 5.};
 const float ambient_light_intensity     = 0.1f;
 const float specular_light_intensity    = 0.5f;
 
@@ -69,7 +70,7 @@ void renderLoop(GLFWwindow* window)
 
     simple::Camera camera;
     s_camera.ptr = &camera;
-    camera.setViewMatrix(glm::lookAt(glm::vec3(1.0f, 1.0f, 1.0f), {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}));
+    camera.setViewMatrix(glm::lookAt(glm::vec3(5.0f, 5.0f, 5.0f), {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}));
     {
         glm::ivec2 window_size;
         glfwGetFramebufferSize(window, &window_size.x, &window_size.y);
@@ -77,11 +78,23 @@ void renderLoop(GLFWwindow* window)
                                                        s_camera.near, s_camera.far));
     }
 
-    simple::ShaderProgram shader_program {vertex_shader, fragment_shader};
+    simple::ShaderProgram shader_program{vertex_shader, fragment_shader};
 
-    simple::InstancedMesh mesh {Cube::vertex_positions, Cube::vertex_normals, Cube::vertex_uvs, Cube::indices};
-    mesh.addInstanceData(4, 1, std::array{glm::vec3(1.), glm::vec3{-1.}, glm::vec3{1., 0., 0.}});
-    mesh.setInstanceCount(3);
+    simple::InstancedMesh mesh{Cube::vertex_positions, Cube::vertex_normals, Cube::vertex_uvs, Cube::indices};
+
+    std::array<glm::vec3, 27> instance_offsets {};
+    {
+        std::size_t i = 0;
+        std::array<float, 3> offsets {-2.f, 0.f, 2.f};
+
+        for (float x : offsets)
+            for (float y : offsets)
+                for (float z : offsets)
+                    instance_offsets[i++] = {x, y, z};
+    }
+
+    mesh.addInstanceData(4, 1, instance_offsets);
+    mesh.setInstanceCount(instance_offsets.size());
 
     while (!glfwWindowShouldClose(window))
     {
