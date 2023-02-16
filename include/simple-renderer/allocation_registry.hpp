@@ -33,6 +33,9 @@ public:
     /// Same as deallocate(), but returns false on failure instead of throwing an axception.
     bool tryDeallocate(uintptr offset) noexcept;
 
+    /// Return the biggest block that could be allocated.
+    [[nodiscard]] uintptr getMaxAllocation() const noexcept;
+
 private:
 
     class Block

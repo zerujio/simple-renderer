@@ -63,11 +63,14 @@ public:
 
 protected:
     template<typename CommandType>
-    void m_emplaceDrawCommands(const CommandCollector& collector, CommandType&& command) const
+    void m_emplaceDrawCommand(const CommandCollector& collector, CommandType&& command) const
     { m_vertex_specification.emplaceDrawCommand(collector, std::forward<CommandType>(command)); }
 
     [[nodiscard]] DrawElementsCommand m_createDrawElementsCommand() const;
     [[nodiscard]] DrawArraysCommand m_createDrawArraysCommand() const;
+
+    [[nodiscard]] VertexAttributeSpecification& m_getVertexAttributes() { return m_vertex_specification; }
+    [[nodiscard]] const VertexAttributeSpecification& m_getVertxAttributes() { return m_vertex_specification; }
 
 private:
     DrawMode m_draw_mode{DrawMode::triangles};

@@ -34,7 +34,7 @@ public:
      */
     template<typename Array>
     void bindAttributes(const VertexBuffer &vertex_buffer, const VertexBufferSectionDescriptor &section,
-                          Array attribute_locations, std::uint32_t instance_divisor = 0)
+                          const Array& attribute_locations, std::uint32_t instance_divisor = 0)
     {
         m_bindAttributes(vertex_buffer, section, std::data(attribute_locations), std::size(attribute_locations),
                          instance_divisor);
@@ -54,7 +54,7 @@ public:
 
 private:
     void m_bindAttributes(const VertexBuffer &vertex_buffer, const VertexBufferSectionDescriptor &section,
-                          int *locations, std::size_t num_locations, GLuint instance_divisor);
+                          const int *locations, std::size_t num_locations, GLuint instance_divisor);
 
     void m_bindAttribute(GLuint attribute_location, GLuint buffer_binding, const VertexAttributeDescriptor &attribute);
 

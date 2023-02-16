@@ -1,6 +1,7 @@
 #include "simple-renderer/allocation_registry.hpp"
 
 #include <stdexcept>
+#include <algorithm>
 
 namespace simple {
 
@@ -71,6 +72,20 @@ void AllocationRegistry::deallocate(uintptr offset)
     const bool succeeded = tryDeallocate(offset);
     if (!succeeded)
         throw std::logic_error("allocation registry: invalid deallocation offset");
+}
+
+AllocationRegistry::uintptr AllocationRegistry::getMaxAllocation() const noexcept
+{
+    uintptr max_free_block_size = 0;
+    uintptr block_size_sum = 0;
+    for (const auto& block : m_blocks)
+    {
+        const auto size = block.getSize();
+        block_size_sum += size;
+        if (size > max_free_block_size)
+            max_free_block_size = size;
+    }
+    return std::max(max_free_block_size, m_size - block_size_sum);
 }
 
 } // simple

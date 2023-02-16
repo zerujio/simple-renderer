@@ -69,9 +69,9 @@ Mesh::Mesh(VertexDataInitializer<glm::vec3> positions, VertexDataInitializer<glm
 void Mesh::collectDrawCommands(const Drawable::CommandCollector &collector) const
 {
     if (isIndexed())
-        m_emplaceDrawCommands(collector, m_createDrawElementsCommand());
+        m_emplaceDrawCommand(collector, m_createDrawElementsCommand());
     else
-        m_emplaceDrawCommands(collector, m_createDrawArraysCommand());
+        m_emplaceDrawCommand(collector, m_createDrawArraysCommand());
 }
 
 DrawElementsCommand Mesh::m_createDrawElementsCommand() const

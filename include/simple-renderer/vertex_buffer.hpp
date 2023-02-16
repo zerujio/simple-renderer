@@ -203,6 +203,9 @@ public:
      */
     void discardAttributeData(size_uint index);
 
+    /// Calculate the maximum size of a new section given the remaining space.
+    [[nodiscard]] size_uint getMaxNewSectionSize() const { return m_allocator.getMaxAllocation(); }
+
     [[nodiscard]] auto begin() const { return m_sections.begin(); }
     [[nodiscard]] auto end() const { return m_sections.end(); }
 

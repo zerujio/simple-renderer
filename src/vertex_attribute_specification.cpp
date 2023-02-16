@@ -109,7 +109,7 @@ void VertexAttributeSpecification::m_bindAttribute(std::uint32_t attribute_locat
 }
 
 void VertexAttributeSpecification::m_bindAttributes(const VertexBuffer &vertex_buffer, const VertexBufferSectionDescriptor &section,
-                                                    int *locations, std::size_t num_locations, GLuint instance_divisor)
+                                                    const int *locations, std::size_t num_locations, GLuint instance_divisor)
 {
     if (section.attributes.getAttributeCount() != num_locations)
         throw std::logic_error("number of locations specified doesn't match number of attributes in vertex buffer");
