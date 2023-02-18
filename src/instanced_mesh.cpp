@@ -2,6 +2,49 @@
 
 namespace simple {
 
+struct InstancedMesh::DataDescriptor
+{
+    DataDescriptor() = default;
+
+    DataDescriptor(std::pair<const int *, std::size_t> locations, std::uint64_t section_index, std::uint32_t divisor)
+            : attribute_locations(locations.first, locations.first + locations.second), section_index(section_index),
+              divisor(divisor)
+    {}
+
+    std::vector<std::int32_t> attribute_locations{};
+    std::uint64_t section_index{0};
+    std::uint32_t divisor{0};
+};
+
+class InstancedMesh::BufferDataLoader : public DataLoader
+{
+public:
+    BufferDataLoader(GL::BufferHandle buffer, std::uintptr_t offset) : m_buffer(buffer), m_offset(offset) {}
+
+    const VertexBufferSectionDescriptor &operator()(VertexBuffer &vertex_buffer,
+                                                    std::uint32_t count,
+                                                    VertexAttributeSequence attributes) const override
+    { return vertex_buffer.addAttributeData(m_buffer, m_offset, count, std::move(attributes)); }
+
+private:
+    GL::BufferHandle m_buffer;
+    std::uintptr_t m_offset;
+};
+
+class InstancedMesh::ArrayDataLoader : public DataLoader
+{
+public:
+    explicit ArrayDataLoader(const void* data) : m_data(data) {}
+
+    const VertexBufferSectionDescriptor &operator()(VertexBuffer &vertex_buffer,
+                                                    std::uint32_t count,
+                                                    VertexAttributeSequence attributes) const override
+    { return vertex_buffer.addAttributeData(m_data, count, std::move(attributes)); }
+
+private:
+    const void *m_data;
+};
+
 void InstancedMesh::collectDrawCommands(const Drawable::CommandCollector &collector) const
 {
     if (isIndexed())
@@ -16,32 +59,16 @@ void InstancedMesh::m_resizeInstanceBuffer(std::size_t new_size)
 {
     VertexBuffer new_buffer{new_size};
 
-    for (std::size_t section_index = 0; section_index < m_instance_buffer.getSectionCount(); section_index++)
+    for (auto &[handle, data_descriptor]: m_descriptors)
     {
-        const auto &section_descriptor = new_buffer.addAttributeData(m_instance_buffer, section_index);
-        const auto &[attribute_locations, instance_divisor] = m_attribute_bindings[section_index];
-        m_getVertexAttributes().bindAttributes(new_buffer, section_descriptor, attribute_locations, instance_divisor);
+        const auto &section_descriptor = new_buffer.addAttributeData(m_instance_buffer,
+                                                                     data_descriptor.section_index);
+        data_descriptor.section_index = new_buffer.getSectionCount() - 1;
+        m_getVertexAttributes().bindAttributes(new_buffer, section_descriptor, data_descriptor.attribute_locations,
+                                               data_descriptor.divisor);
     }
 
     m_instance_buffer = std::move(new_buffer);
-}
-
-const std::pair<std::vector<std::int32_t>, std::uint32_t> &
-InstancedMesh::m_setAttributeBinding(std::size_t section_index, std::pair<const int *, std::size_t> locations,
-                                     std::uint32_t instance_divisor)
-{
-    if (section_index >= m_attribute_bindings.size())
-        m_attribute_bindings.resize(section_index + 1);
-
-    auto &pair = m_attribute_bindings[section_index];
-    auto &[current_locations, current_divisor] = pair;
-
-    current_locations.clear();
-    current_locations.insert(current_locations.end(), locations.first, locations.first + locations.second);
-
-    current_divisor = instance_divisor;
-
-    return pair;
 }
 
 void InstancedMesh::m_ensureInstanceBufferCapacity(std::size_t section_size)
@@ -55,41 +82,121 @@ void InstancedMesh::m_ensureInstanceBufferCapacity(std::size_t section_size)
     m_resizeInstanceBuffer(new_size);
 }
 
-void InstancedMesh::m_addInstanceDataFromArray(std::pair<const int *, std::size_t> locations,
-                                               const VertexAttributeSequence &attributes, std::uint32_t divisor,
+auto InstancedMesh::m_addInstanceDataFromArray(std::pair<const int *, std::size_t> locations,
+                                               VertexAttributeSequence &attributes, std::uint32_t divisor,
                                                std::uint32_t count, const void *data)
+-> InstanceDataHandle
 {
-    m_addInstanceData(locations, attributes, divisor, count,
-                      [data, count, &attributes](VertexBuffer& vertex_buffer)
-                      { return vertex_buffer.addAttributeData(data, count, attributes); });
+    return m_addInstanceData(locations, attributes, count, ArrayDataLoader(data), divisor);
 }
 
-void InstancedMesh::m_addInstanceDataFromBuffer(std::pair<const int *, std::size_t> locations,
-                                                const VertexAttributeSequence &attributes, std::uint32_t divisor,
-                                                std::uint32_t count, GL::BufferHandle buffer,
-                                                std::uintptr_t buffer_offset)
+auto InstancedMesh::m_addInstanceDataFromBuffer(std::pair<const int *, std::size_t> locations,
+                                                VertexAttributeSequence &attributes, std::uint32_t count,
+                                                GL::BufferHandle buffer, std::uintptr_t buffer_offset,
+                                                std::uint32_t divisor)
+-> InstanceDataHandle
 {
-    m_addInstanceData(locations, attributes, divisor, count,
-                      [buffer, buffer_offset, count, &attributes](VertexBuffer &vertex_buffer)
-                      { return vertex_buffer.addAttributeData(buffer, buffer_offset, count, attributes); });
+    return m_addInstanceData(locations, attributes, count, BufferDataLoader(buffer, buffer_offset), divisor);
 }
 
-template<typename CopyFunction>
-void InstancedMesh::m_addInstanceData(std::pair<const int *, std::size_t> locations,
-                                      const VertexAttributeSequence &attributes, std::uint32_t instance_divisor,
-                                      std::uint32_t instance_count, const CopyFunction &copy_function)
+void InstancedMesh::m_discardBufferSection(std::uintptr_t section_index)
+{
+    m_instance_buffer.discardAttributeData(section_index);
+    for (auto &[_, descriptor]: m_descriptors)
+        if (descriptor.section_index > section_index)
+            descriptor.section_index--;
+}
+
+auto InstancedMesh::m_addInstanceData(std::pair<const int *, std::size_t> locations,
+                                      VertexAttributeSequence &attributes,
+                                      std::uint32_t count, const DataLoader &loader,
+                                      std::uint32_t instance_divisor)
+-> InstanceDataHandle
 {
     if (locations.second != attributes.getAttributeCount())
         throw std::logic_error("provided a different number of attributes and attribute locations");
 
-    m_ensureInstanceBufferCapacity(instance_count * attributes.getStride());
+    m_ensureInstanceBufferCapacity(count * attributes.getStride());
 
-    const auto &section_descriptor = copy_function(m_instance_buffer);
+    const auto &section_descriptor = loader(m_instance_buffer, count, attributes);
 
-    const auto &[location_vector, _] = m_setAttributeBinding(m_instance_buffer.getSectionCount() - 1,
-                                                             locations, instance_count);
+    const auto [iter, _] = m_descriptors.try_emplace(m_createHandle(), locations,
+                                                     m_instance_buffer.getSectionCount() - 1, instance_divisor);
+    const auto &[handle, descriptor] = *iter;
 
-    m_getVertexAttributes().bindAttributes(m_instance_buffer, section_descriptor, location_vector, instance_divisor);
+    m_getVertexAttributes().bindAttributes(m_instance_buffer, section_descriptor, descriptor.attribute_locations,
+                                           descriptor.divisor);
+
+    return handle;
+}
+
+void InstancedMesh::removeInstanceData(InstancedMesh::InstanceDataHandle handle)
+{
+    const auto iter = m_descriptors.find(handle);
+
+    if (iter == m_descriptors.end())
+        return;
+
+    const auto &descriptor = iter->second;
+
+    m_discardBufferSection(descriptor.section_index);
+
+    for (auto location: descriptor.attribute_locations)
+        m_getVertexAttributes().unbindAttribute(location);
+
+    m_descriptors.erase(iter);
+}
+
+bool InstancedMesh::isHandleValid(InstanceDataHandle handle) const
+{
+    return m_descriptors.find(handle) != m_descriptors.end();
+}
+
+auto InstancedMesh::m_createHandle() -> InstanceDataHandle
+{
+    return static_cast<InstanceDataHandle>(m_next_handle++);
+}
+
+void InstancedMesh::updateInstanceData(InstancedMesh::InstanceDataHandle handle, std::uint32_t instance_count,
+                                       const void *new_data)
+{
+    const auto iter = m_descriptors.find(handle);
+
+    if (iter == m_descriptors.end())
+        throw std::logic_error("invalid handle");
+
+    auto &descriptor = iter->second;
+
+    if (instance_count == m_instance_buffer.getSectionDescriptor(descriptor.section_index).vertex_count)
+    {
+        m_instance_buffer.updateAttributeData(descriptor.section_index, new_data);
+        return;
+    }
+
+    auto old_section_descriptor = m_instance_buffer[descriptor.section_index];
+
+    m_discardBufferSection(descriptor.section_index);
+
+    if (instance_count > old_section_descriptor.vertex_count)
+        m_ensureInstanceBufferCapacity(instance_count * old_section_descriptor.attributes.getStride());
+
+    m_instance_buffer.addAttributeData(new_data, instance_count, std::move(old_section_descriptor.attributes));
+    descriptor.section_index = m_instance_buffer.getSectionCount() - 1;
+}
+
+void InstancedMesh::m_updateInstanceData(InstanceDataHandle handle, std::uint32_t instance_count, const DataLoader &loader)
+{
+    const auto iter = m_descriptors.find(handle);
+
+    if (iter == m_descriptors.end())
+        throw std::logic_error("invalid handle");
+
+    auto &descriptor = iter->second;
+
+    if (instance_count == m_instance_buffer.getSectionDescriptor(descriptor.section_index).vertex_count)
+    {
+        m_instance_buffer.updateAttributeData(descriptor.section_index, new_data);
+    }
 }
 
 } // simple

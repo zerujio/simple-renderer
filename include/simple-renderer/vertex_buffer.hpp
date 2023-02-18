@@ -2,6 +2,7 @@
 #define PROCEDURALPLACEMENTLIB_VERTEX_BUFFER_HPP
 
 #include "allocation_registry.hpp"
+#include "buffer_ref.hpp"
 
 #include "glutils/buffer.hpp"
 #include "glutils/vertex_attrib_utils.hpp"
@@ -137,6 +138,8 @@ public:
     [[nodiscard]] const VertexBufferSectionDescriptor &operator[](size_uint index) const noexcept
     { return m_sections[index]; }
 
+    // TODO: create a new overload of this class taking a polymorphic initializer and make this overload a call to the new one.
+
     /// Copy vertex data from host memory into the buffer, creating a new section.
     /**
      * This function copies @p vertex_count * @p vertex_attrib_sequence.getStride() bytes from the vertex array pointed
@@ -181,6 +184,8 @@ public:
 
     const VertexBufferSectionDescriptor *
     tryAddAttributeData(const VertexBuffer &vertex_buffer, size_uint section_index);
+
+    // TODO: rework updateAttributeData() to use polymorphic initializers like addAttributeData().
 
     /// Update the contents of a data section, without changing the format or number of vertices.
     /**

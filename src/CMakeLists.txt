@@ -1,13 +1,14 @@
 add_library(simple-renderer
         STATIC
+        mesh.cpp
+        camera.cpp
         renderer.cpp
         shader_program.cpp
-        mesh.cpp
         glsl_definitions.cpp
-        camera.cpp
         draw_command.cpp
         command_queue.cpp
         instanced_mesh.cpp
+        buffer_ref.cpp
         vertex_buffer.cpp
         buffer_range.cpp
         allocation_registry.cpp

@@ -58,6 +58,7 @@ const VertexBufferSectionDescriptor& VertexBuffer::m_createSection(const Initial
     return *section_descriptor_ptr;
 }
 
+// TODO: make the InitializeFromDevice and InitializeFromHost functions public and use the new RBufferRef class.
 struct InitializeFromDevice final
 {
     using size_uint = VertexBuffer::size_uint;
