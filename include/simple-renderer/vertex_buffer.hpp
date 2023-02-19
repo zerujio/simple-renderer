@@ -8,7 +8,7 @@
 #include "glutils/vertex_attrib_utils.hpp"
 
 #include <vector>
-#include <optional>
+#include <functional>
 
 namespace simple {
 
@@ -18,19 +18,19 @@ struct VertexAttributeDescriptor final
     using size_uint = GLuint;
 
     /// base data type of the attribute (int, float, etc.)
-    GL::VertexAttributeBaseType base_type {GL::VertexAttributeBaseType::_float};
+    GL::VertexAttributeBaseType base_type{GL::VertexAttributeBaseType::_float};
 
     /// vector element count (1, 2, 3 or 4).
-    GL::VertexAttributeLength length {0};
+    GL::VertexAttributeLength length{0};
 
     /// offset relative to the start of the attribute sequence
-    size_uint relative_offset {0};
+    size_uint relative_offset{0};
 
     /// convert double and integer base types to floating point.
-    bool float_cast {false};
+    bool float_cast{false};
 
     /// if float_cast is true, convert integers via normalization rather than a C-style cast.
-    bool normalized {false};
+    bool normalized{false};
 };
 
 /// Specifies the layout of a set of interleaved vertex attributes.
@@ -174,6 +174,9 @@ public:
     /// Copy vertex data from another vertex buffer.
     const VertexBufferSectionDescriptor &addAttributeData(const VertexBuffer &vertex_buffer, size_uint section_index);
 
+    const VertexBufferSectionDescriptor &addAttributeData(const std::function<void(WBufferRef)> &initializer,
+                                                          size_uint vertex_count, VertexAttributeSequence attributes);
+
     /// Same as addAttributeData() but returns nullptr on failure instead of throwing an exception.
     const VertexBufferSectionDescriptor *tryAddAttributeData(const void *vertex_data, size_uint vertex_count,
                                                              VertexAttributeSequence attributes);
@@ -185,7 +188,9 @@ public:
     const VertexBufferSectionDescriptor *
     tryAddAttributeData(const VertexBuffer &vertex_buffer, size_uint section_index);
 
-    // TODO: rework updateAttributeData() to use polymorphic initializers like addAttributeData().
+    const VertexBufferSectionDescriptor *tryAddAttributeData(const std::function<void(WBufferRef)> &initializer,
+                                                             size_uint vertex_count,
+                                                             VertexAttributeSequence attribute_sequence);
 
     /// Update the contents of a data section, without changing the format or number of vertices.
     /**
@@ -199,6 +204,8 @@ public:
     void updateAttributeData(size_uint index, GL::BufferHandle read_buffer,
                              size_uint read_offset) const;
 
+    void updateAttributeData(size_uint index, const std::function<void(WBufferRef)> &initializer);
+
     /// Discard the data section with the given index.
     /**
      * References to the section descriptor and those with a greater index will be invalidated. The contents of all
@@ -208,24 +215,24 @@ public:
     void discardAttributeData(size_uint index);
 
     /// Calculate the maximum size of a new section given the remaining space.
-    [[nodiscard]] size_uint getMaxNewSectionSize() const { return m_allocator.getMaxAllocation(); }
+    [[nodiscard]] size_uint getMaxNewSectionSize() const
+    { return m_allocator.getMaxAllocation(); }
 
-    [[nodiscard]] auto begin() const { return m_sections.begin(); }
-    [[nodiscard]] auto end() const { return m_sections.end(); }
+    [[nodiscard]] auto begin() const
+    { return m_sections.begin(); }
+
+    [[nodiscard]] auto end() const
+    { return m_sections.end(); }
+
+    static std::function<void(WBufferRef)>
+    makeSectionInitializerFromBuffer(GL::BufferHandle buffer, std::uintptr_t offset, std::size_t vertex_count,
+                                     const VertexAttributeSequence& attributes);
+
+    static std::function<void(WBufferRef)> makeSectionInitializerFromPointer(const void* data_pointer,
+                                                                             std::size_t vertex_count,
+                                                                             const VertexAttributeSequence& attributes);
 
 private:
-    template<typename Initializer>
-    [[nodiscard]]
-    const VertexBufferSectionDescriptor *m_tryCreateSection(const Initializer &initializer,
-                                                            VertexAttributeSequence &&attribute_sequence,
-                                                            size_uint vertex_count);
-
-    template<typename Initializer>
-    [[nodiscard]]
-    const VertexBufferSectionDescriptor &m_createSection(const Initializer &initializer,
-                                                         VertexAttributeSequence &&attribute_sequence,
-                                                         size_uint vertex_count);
-
     GL::Buffer m_buffer;
     size_uint m_size;
     AllocationRegistry m_allocator;

@@ -24,8 +24,6 @@ public:
 
     enum class InstanceDataHandle : std::size_t;
 
-    // TODO: allow addInstanceData() and updateInstanceData() to work with a VertexBuffer polymorphic initializer.
-
     /// Add instanced attributes to the mesh.
     /**
      *
@@ -76,8 +74,18 @@ public:
                                        GL::BufferHandle buffer, std::uintptr_t buffer_offset)
     {
         return m_addInstanceDataFromBuffer({std::data(attribute_locations), std::size(attribute_locations)},
-                                           instanced_attributes, instance_count, buffer, buffer_offset,
+                                           std::move(instanced_attributes), instance_count, buffer, buffer_offset,
                                            instance_divisor);
+    }
+
+    template<typename LocationArray>
+    InstanceDataHandle addInstanceData(const LocationArray &attribute_locations,
+                                       VertexAttributeSequence instanced_attributes,
+                                       std::uint32_t instance_divisor, std::uint32_t instance_count,
+                                       const std::function<void(WBufferRef)> &initializer)
+    {
+        return m_addInstanceData({std::data(attribute_locations, std::size(attribute_locations))},
+                                 std::move(instanced_attributes), instance_divisor, instance_count, initializer);
     }
 
     /// Remove instanced attributes from the mesh.
@@ -86,15 +94,28 @@ public:
     /// Set new values for previously added instanced attributes.
     void updateInstanceData(InstanceDataHandle handle, std::uint32_t instance_count, const void *new_data);
 
+    void updateInstanceData(InstanceDataHandle handle, std::uint32_t instance_count, GL::BufferHandle read_buffer,
+                            std::uintptr_t read_offset);
+
     void updateInstanceData(InstanceDataHandle handle, std::uint32_t instance_count,
-                            GL::BufferHandle read_buffer, std::uintptr_t read_offset);
+                            const std::function<void(WBufferRef)> &initializer);
 
     [[nodiscard]] bool isHandleValid(InstanceDataHandle handle) const;
 
 private:
-    struct DataDescriptor;
-    struct AddDataFunctionWrapper;
-    struct UpdateDataFunctionWrapper;
+    struct DataDescriptor
+    {
+        DataDescriptor() = default;
+
+        DataDescriptor(std::pair<const int *, std::size_t> locations, std::uint64_t section_index, std::uint32_t divisor)
+                : attribute_locations(locations.first, locations.first + locations.second), section_index(section_index),
+                  divisor(divisor)
+        {}
+
+        std::vector<std::int32_t> attribute_locations{};
+        std::uint64_t section_index{0};
+        std::uint32_t divisor{0};
+    };
 
     /// Allocate a new buffer of the given size, copy contents of current buffer, and swap them.
     void m_resizeInstanceBuffer(std::size_t new_size);
@@ -123,13 +144,8 @@ private:
     [[nodiscard]]
     InstanceDataHandle m_addInstanceData(std::pair<const int *, std::size_t> locations,
                                          VertexAttributeSequence &attributes,
-                                         std::uint32_t count, const AddDataFunctionWrapper &add_data,
+                                         std::uint32_t count, const std::function<void(WBufferRef)> &initializer,
                                          std::uint32_t instance_divisor);
-
-    /// Replace existing data.
-    void m_updateInstanceData(InstanceDataHandle handle, std::uint32_t instance_count,
-                              const UpdateDataFunctionWrapper& update_data,
-                              const AddDataFunctionWrapper& add_data);
 
     void m_discardBufferSection(std::uintptr_t section_index);
 
