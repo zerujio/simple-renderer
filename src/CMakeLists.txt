@@ -8,7 +8,6 @@ add_library(simple-renderer
         draw_command.cpp
         command_queue.cpp
         instanced_mesh.cpp
-        buffer_ref.cpp
         vertex_buffer.cpp
         buffer_range.cpp
         allocation_registry.cpp
