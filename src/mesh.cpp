@@ -2,6 +2,7 @@
 
 #include "simple-renderer/glsl_definitions.hpp"
 #include "simple-renderer/vertex_buffer.hpp"
+#include "simple-renderer/vertex_data_loader.hpp"
 
 #include <utility>
 #include <type_traits>
