@@ -33,6 +33,9 @@ namespace simple {
          * @param frag_src GLSL code for the fragment shader stage.
          */
         ShaderProgram(const char *vert_src, const char *frag_src);
+        ShaderProgram(const std::string& vert_src, const std::string& frag_src)
+                : ShaderProgram(vert_src.c_str(), frag_src.c_str())
+        {}
 
     private:
         GL::Program m_program;
