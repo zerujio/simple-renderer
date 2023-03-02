@@ -84,4 +84,14 @@ namespace simple {
         if (!m_program.getParameter(ProgramHandle::Parameter::link_status))
             throw GLError("ProgramHandle linking error: " + m_program.getInfoLog());
     }
+
+GLuint BaseShaderProgram::getResourceIndex(BaseShaderProgram::Interface interface, const char *name) const
+{
+    return m_program.getResourceIndex(interface, name);
+}
+
+BaseShaderProgram::UniformLocation BaseShaderProgram::getUniformLocation(const char *name) const
+{
+    return UniformLocation{m_program.getResourceLocation(Interface::uniform, name)};
+}
 } // simple
