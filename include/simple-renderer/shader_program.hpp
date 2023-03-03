@@ -208,7 +208,7 @@ public:
         explicit TypedUniform(UniformLocation location) : m_location(location)
         {}
 
-        constexpr auto operator[](uint index)
+        constexpr TypedUniform<T> operator[](uint index) const
         {
             return TypedUniform<T>(UniformLocation(m_location.value + getRequiredLocations<T>() * index));
         }
@@ -361,8 +361,7 @@ public:
      * Vertex shaders have access to the following vertex attributes:
      *      vec3 vertex_position: the position of the vertex in model space.
      *      vec3 vertex_normal  : the mesh normal at this vertex, in model space.
-     *      vec4 vertex_color   : an RGBA color for this vertex. May be unused, in which case it defaults to
-     *                          black (i.e. vec4(0, 0, 0, 0)).
+     *      vec2 vertex_uv      : texture coordinates of the model.
      *
      * The only predefined output for the vertex stage is the built-in gl_Position variable.
      *

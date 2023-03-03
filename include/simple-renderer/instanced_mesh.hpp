@@ -74,7 +74,7 @@ public:
                                        GL::BufferHandle buffer, std::uintptr_t buffer_offset)
     {
         return m_addInstanceDataFromBuffer({std::data(attribute_locations), std::size(attribute_locations)},
-                                           std::move(instanced_attributes), instance_count, buffer, buffer_offset,
+                                           instanced_attributes, instance_count, buffer, buffer_offset,
                                            instance_divisor);
     }
 
@@ -85,7 +85,7 @@ public:
                                        const std::function<void(WBufferRef)> &initializer)
     {
         return m_addInstanceData({std::data(attribute_locations, std::size(attribute_locations))},
-                                 std::move(instanced_attributes), instance_divisor, instance_count, initializer);
+                                 instanced_attributes, instance_count, initializer, instance_divisor);
     }
 
     /// Remove instanced attributes from the mesh.
