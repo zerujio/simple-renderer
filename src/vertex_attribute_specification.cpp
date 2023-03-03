@@ -30,7 +30,7 @@ std::uint32_t VertexAttributeSpecification::m_assignBufferBinding(std::uint64_t 
 {
     std::size_t binding_index = 0;
 
-    for (;binding_index < m_attribute_bindings.size(); binding_index++)
+    for (;binding_index < m_vertex_buffer_bindings.size(); binding_index++)
     {
         if (std::count(m_attribute_bindings.begin(), m_attribute_bindings.end(), binding_index) == 0)
         {
