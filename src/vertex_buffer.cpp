@@ -134,6 +134,7 @@ void VertexBuffer::discardAttributeData(VertexBuffer::size_uint index)
     if (index >= m_sections.size())
         throw std::logic_error("section index out of range");
 
+    m_allocator.deallocate(m_sections[index].buffer_offset);
     m_sections.erase(m_sections.begin() + index);
 }
 

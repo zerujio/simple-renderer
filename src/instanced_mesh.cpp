@@ -143,23 +143,28 @@ void InstancedMesh::updateInstanceData(InstancedMesh::InstanceDataHandle handle,
     if (iter == m_descriptors.end())
         throw std::logic_error("invalid handle");
 
-    auto &descriptor = iter->second;
-
-    if (instance_count == m_instance_buffer.getSectionDescriptor(descriptor.section_index).vertex_count)
+    if (instance_count == m_instance_buffer.getSectionDescriptor(iter->second.section_index).vertex_count)
     {
-        m_instance_buffer.updateAttributeData(descriptor.section_index, initializer);
+        m_instance_buffer.updateAttributeData(iter->second.section_index, initializer);
         return;
     }
 
-    auto old_section_descriptor = m_instance_buffer[descriptor.section_index];
+    auto old_descriptor = std::move(iter->second);
+    m_descriptors.erase(iter);
 
-    m_discardBufferSection(descriptor.section_index);
+    auto old_section_descriptor = m_instance_buffer[old_descriptor.section_index];
+    m_discardBufferSection(old_descriptor.section_index);
 
     if (instance_count > old_section_descriptor.vertex_count)
         m_ensureInstanceBufferCapacity(instance_count * old_section_descriptor.attributes.getStride());
 
-    m_instance_buffer.addAttributeData(initializer, instance_count, std::move(old_section_descriptor.attributes));
-    descriptor.section_index = m_instance_buffer.getSectionCount() - 1;
+    auto& new_section_descriptor = m_instance_buffer.addAttributeData(initializer, instance_count,
+                                                                      std::move(old_section_descriptor.attributes));
+    old_descriptor.section_index = m_instance_buffer.getSectionCount() - 1;
+
+    m_getVertexAttributes().bindAttributes(m_instance_buffer, new_section_descriptor,
+                                           old_descriptor.attribute_locations, old_descriptor.divisor);
+    m_descriptors.emplace(handle, std::move(old_descriptor));
 }
 
 } // simple
