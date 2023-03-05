@@ -4,6 +4,7 @@
 #include "glm/common.hpp"
 
 #include <utility>
+#include <stdexcept>
 
 namespace simple {
 
@@ -24,25 +25,27 @@ std::pair<GL::Texture::SizedInternalFormat, GL::Texture::DataFormat>
             return {IF::rgb8, DF::rgb};
         case ImageData::ColorChannels::rgba:
             return {IF::rgba8, DF::rgba};
+        default:
+            throw std::logic_error("invalid enum value");
     }
 }
 
 int calculateMipmapLevels(glm::uvec2 image_size)
 {
     int mipmap_levels = 0;
-    for (glm::uvec2 size = image_size; size.x > 0 && size.y > 0; size = glm::max({1, 1}, size / 2u))
+    for (glm::uvec2 size = image_size; size.x > 1 && size.y > 1; size = glm::max({1, 1}, size / 2u))
         mipmap_levels++;
     return mipmap_levels;
 }
 
 Texture2D::Texture2D(const ImageData &image, bool generate_mipmaps) : m_texture(GL::Texture::Type::_2d)
 {
-    const int mipmap_levels = generate_mipmaps ? calculateMipmapLevels(image.getSize()) : 0;
+    const int mipmap_levels = generate_mipmaps ? calculateMipmapLevels(image.getSize()) : 1;
 
     const auto [internal_format, data_format] = parseFormat(image.getChannels());
 
     m_texture.setStorage2D(mipmap_levels, internal_format, image.getSize().x, image.getSize().y);
-    m_texture.updateImage2D(0, 0,  0, image.getSize().x, image.getSize().y, data_format,
+    m_texture.updateImage2D(0, 0, 0, image.getSize().x, image.getSize().y, data_format,
                             GL::Texture::DataType::ubyte, image.getDataPtr());
 
     if (generate_mipmaps)

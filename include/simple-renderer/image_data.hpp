@@ -4,6 +4,7 @@
 #include "glm/vec2.hpp"
 
 #include <memory>
+#include <string>
 
 namespace simple {
 
@@ -13,7 +14,7 @@ public:
     enum class ColorChannels { r = 1u, rg = 2u, rgb = 3u, rgba = 4u};
 
     [[nodiscard]]
-    static ImageData fromFile(const char* filename);
+    static ImageData fromFile(const std::string &filename);
 
     ImageData(ColorChannels num_channels, glm::uvec2 size, std::shared_ptr<std::byte[]> data)
         : m_channels(num_channels), m_size(size), m_data(std::move(data))

@@ -5,12 +5,12 @@
 #include <stdexcept>
 
 namespace simple {
-ImageData ImageData::fromFile(const char *filename)
+ImageData ImageData::fromFile(const std::string &filename)
 {
     int channels;
     glm::ivec2 size;
 
-    auto raw_ptr = reinterpret_cast<std::byte*>(stbi_load(filename, &size.x, &size.y, &channels, 0));
+    auto raw_ptr = reinterpret_cast<std::byte*>(stbi_load(filename.c_str(), &size.x, &size.y, &channels, 0));
 
     if (!raw_ptr)
         throw std::runtime_error(stbi_failure_reason());
