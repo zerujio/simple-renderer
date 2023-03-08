@@ -38,7 +38,8 @@ int calculateMipmapLevels(glm::uvec2 image_size)
     return mipmap_levels;
 }
 
-Texture2D::Texture2D(const ImageData &image, bool generate_mipmaps) : m_texture(GL::Texture::Type::_2d)
+Texture2D::Texture2D(const ImageData &image, bool generate_mipmaps)
+    : m_texture(GL::Texture::Type::_2d), m_size(image.getSize())
 {
     const int mipmap_levels = generate_mipmaps ? calculateMipmapLevels(image.getSize()) : 1;
 

@@ -3,6 +3,8 @@
 
 #include "glutils/texture.hpp"
 
+#include "glm/vec2.hpp"
+
 namespace simple {
 
 class ImageData;
@@ -15,8 +17,12 @@ public:
     [[nodiscard]]
     GL::TextureHandle getGLObject() const { return m_texture; }
 
+    [[nodiscard]]
+    glm::uvec2 getSize() const { return m_size; }
+
 private:
     GL::Texture m_texture;
+    glm::uvec2 m_size;
 };
 
 } // simple
