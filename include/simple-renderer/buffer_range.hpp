@@ -9,7 +9,7 @@
 #include <type_traits>
 #include <memory>
 
-namespace simple {
+namespace Simple {
 
 class RBufferRange;
 class WBufferRange;

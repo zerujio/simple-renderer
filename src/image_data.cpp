@@ -4,7 +4,7 @@
 
 #include <stdexcept>
 
-namespace simple {
+namespace Simple {
 ImageData ImageData::fromFile(const std::string &filename)
 {
     int channels;

@@ -7,7 +7,7 @@
 #include "glutils/program.hpp"
 #include "glutils/vertex_array.hpp"
 
-namespace simple {
+namespace Simple {
 
 /// Base class for all objects which may be drawn by the renderer.
 class Drawable

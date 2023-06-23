@@ -5,7 +5,7 @@
 #include "glutils/program.hpp"
 #include "glutils/vertex_array.hpp"
 
-namespace simple {
+namespace Simple {
 
 /**
  * @brief A structure that keeps a reference to a CommandQueue and allows new commands to be enqueued.

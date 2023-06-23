@@ -6,7 +6,7 @@
 #include <memory>
 #include <string>
 
-namespace simple {
+namespace Simple {
 
 class ImageData
 {

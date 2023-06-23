@@ -1,6 +1,6 @@
 #include "simple-renderer/instanced_mesh.hpp"
 
-namespace simple {
+namespace Simple {
 
 void InstancedMesh::collectDrawCommands(const Drawable::CommandCollector &collector) const
 {

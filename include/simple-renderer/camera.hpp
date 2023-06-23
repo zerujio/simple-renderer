@@ -6,7 +6,7 @@
 
 #include <glm/mat4x4.hpp>
 
-namespace simple {
+namespace Simple {
 
 /// Encapsulates camera related data.
 class Camera

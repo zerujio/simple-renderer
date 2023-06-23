@@ -18,13 +18,13 @@ struct UserData
     float camera_fov;
     float camera_near;
     float camera_far;
-    simple::Camera &camera;
+    Simple::Camera &camera;
 };
 
 void updateResolution(GLFWwindow *window, int width, int height)
 {
     // setViewport operates on the OpenGL context; it does not need a Renderer instance.
-    simple::Renderer::setViewport(glm::ivec2(), glm::ivec2(width, height));
+    Simple::Renderer::setViewport(glm::ivec2(), glm::ivec2(width, height));
 
     auto data = static_cast<const UserData *>(glfwGetWindowUserPointer(window));
     data->camera.setProjectionMatrix(glm::perspectiveFov(data->camera_fov,
@@ -100,8 +100,8 @@ int main()
     )glsl";
 
     {
-        simple::Renderer renderer;
-        simple::Camera camera;
+        Simple::Renderer renderer;
+        Simple::Camera camera;
 
         UserData callback_data {glm::pi<float>() / 2.0f, 0.01f, 100.0f, camera};
         glfwSetWindowUserPointer(window, &callback_data);
@@ -111,9 +111,9 @@ int main()
                                                        float(window_size.x), float(window_size.y),
                                                        callback_data.camera_near, callback_data.camera_far));
 
-        simple::ShaderProgram program {vert_src, frag_src}; // compile shaders
+        Simple::ShaderProgram program {vert_src, frag_src}; // compile shaders
 
-        simple::Mesh mesh {Cube::vertex_positions, Cube::vertex_normals, Cube::vertex_uvs, Cube::indices};
+        Simple::Mesh mesh {Cube::vertex_positions, Cube::vertex_normals, Cube::vertex_uvs, Cube::indices};
 
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();

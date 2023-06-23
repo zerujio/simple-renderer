@@ -10,7 +10,7 @@
 #include <vector>
 #include <tuple>
 
-namespace simple {
+namespace Simple {
 
 class VertexBuffer;
 class VertexBufferSectionDescriptor;

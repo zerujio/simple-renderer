@@ -4,7 +4,7 @@
 #include <vector>
 #include <optional>
 
-namespace simple {
+namespace Simple {
 
 /// Keeps track of allocated memory, usually used for GPU buffers.
 class AllocationRegistry final

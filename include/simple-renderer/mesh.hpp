@@ -17,7 +17,7 @@
 #include <vector>
 #include <map>
 
-namespace simple {
+namespace Simple {
 
 /// Base class for renderer-able meshes.
 class Mesh : public Drawable

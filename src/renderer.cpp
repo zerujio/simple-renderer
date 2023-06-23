@@ -11,7 +11,7 @@
 
 using namespace GL;
 
-namespace simple {
+namespace Simple {
 
 
 Renderer::Renderer()

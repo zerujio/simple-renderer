@@ -3,7 +3,7 @@
 
 #include <algorithm>
 
-namespace simple {
+namespace Simple {
 
 void VertexAttributeSpecification::unbindAttribute(std::uint32_t attribute_location)
 {

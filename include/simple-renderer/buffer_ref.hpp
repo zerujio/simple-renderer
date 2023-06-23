@@ -5,7 +5,7 @@
 
 #include <stdexcept>
 
-namespace simple {
+namespace Simple {
 
 class BufferRef
 {

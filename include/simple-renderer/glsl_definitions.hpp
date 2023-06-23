@@ -3,7 +3,7 @@
 
 #include "glutils/glsl_syntax.hpp"
 
-namespace simple {
+namespace Simple {
 
 
     constexpr auto glsl_version_c_str = "#version 430 core\n";

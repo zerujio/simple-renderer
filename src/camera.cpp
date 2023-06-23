@@ -7,7 +7,7 @@
 
 #include <array>
 
-namespace simple {
+namespace Simple {
 
     constexpr auto mat4_size = sizeof(glm::mat4);
 

@@ -3,7 +3,7 @@
 
 #include <type_traits>
 
-namespace simple {
+namespace Simple {
 
 template<typename ... Types> struct TypeSet;
 

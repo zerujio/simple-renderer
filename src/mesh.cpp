@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <array>
 
-namespace simple {
+namespace Simple {
 
 Mesh::Mesh(VertexDataInitializer<glm::vec3> positions, VertexDataInitializer<glm::vec3> normals,
            VertexDataInitializer<glm::vec2> uvs, VertexDataInitializer<unsigned int> indices)

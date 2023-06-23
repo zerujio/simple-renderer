@@ -5,7 +5,7 @@
 
 #include "glm/vec2.hpp"
 
-namespace simple {
+namespace Simple {
 
 class ImageData;
 

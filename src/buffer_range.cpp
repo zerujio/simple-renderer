@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-namespace simple {
+namespace Simple {
 void BufferRange::MappedPtrDeleter::operator()(const std::byte *ptr) const
 {
     if (ptr)

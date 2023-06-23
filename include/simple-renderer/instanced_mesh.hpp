@@ -6,7 +6,7 @@
 #include <vector>
 #include <map>
 
-namespace simple {
+namespace Simple {
 
 class InstancedMesh : public Mesh
 {

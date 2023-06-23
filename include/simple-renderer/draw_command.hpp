@@ -9,7 +9,7 @@
 struct GladGLContext;
 using GLContext = GladGLContext;
 
-namespace simple {
+namespace Simple {
 
 enum class DrawMode
 {

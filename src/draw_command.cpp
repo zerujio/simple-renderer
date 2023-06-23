@@ -2,7 +2,7 @@
 
 #include "glutils/gl.hpp"
 
-namespace simple {
+namespace Simple {
 
 void DrawArraysCommand::operator()(const GLContext &context) const
 {

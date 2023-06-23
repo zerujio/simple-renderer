@@ -10,7 +10,7 @@
 #include <vector>
 #include <functional>
 
-namespace simple {
+namespace Simple {
 
 /// Specifies the data type and location of an attribute.
 struct VertexAttributeDescriptor final

@@ -8,7 +8,7 @@
 #include "drawable.hpp"
 #include "buffer_ref.hpp"
 
-namespace simple {
+namespace Simple {
 
 /// Lightweight object to reference containers used for mesh construction.
 template<typename T>

@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <algorithm>
 
-namespace simple {
+namespace Simple {
 
 AllocationRegistry::AllocationRegistry(uintptr size) : m_size(size) {}
 

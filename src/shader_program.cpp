@@ -8,7 +8,7 @@
 #include <array>
 #include <iostream>
 
-namespace simple {
+namespace Simple {
 
     using namespace GL;
 

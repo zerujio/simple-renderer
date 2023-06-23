@@ -19,7 +19,7 @@
 
 #include <vector>
 
-namespace simple {
+namespace Simple {
 
 /// Performs rendering operations.
 class Renderer

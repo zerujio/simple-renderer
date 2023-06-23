@@ -6,7 +6,7 @@
 #include <utility>
 #include <stdexcept>
 
-namespace simple {
+namespace Simple {
 
 [[nodiscard]]
 std::pair<GL::Texture::SizedInternalFormat, GL::Texture::DataFormat>

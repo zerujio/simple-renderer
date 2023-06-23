@@ -13,12 +13,12 @@ struct {
     float fov = glm::pi<float>() / 2.0f;
     float far = 100.0f;
     float near = 0.01f;
-    simple::Camera* ptr = nullptr;
+    Simple::Camera* ptr = nullptr;
 } s_camera;
 
 void updateResolution(GLFWwindow* window, int width, int height)
 {
-    simple::Renderer::setViewport(glm::ivec2(), glm::ivec2(width, height));
+    Simple::Renderer::setViewport(glm::ivec2(), glm::ivec2(width, height));
 
     if (s_camera.ptr)
         s_camera.ptr->setProjectionMatrix(glm::perspectiveFov(s_camera.fov, float(width), float(height),
@@ -66,9 +66,9 @@ void main()
 
 void renderLoop(GLFWwindow* window)
 {
-    simple::Renderer renderer;
+    Simple::Renderer renderer;
 
-    simple::Camera camera;
+    Simple::Camera camera;
     s_camera.ptr = &camera;
     camera.setViewMatrix(glm::lookAt(glm::vec3(5.0f, 5.0f, 5.0f), {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}));
     {
@@ -78,9 +78,9 @@ void renderLoop(GLFWwindow* window)
                                                        s_camera.near, s_camera.far));
     }
 
-    simple::ShaderProgram shader_program{vertex_shader, fragment_shader};
+    Simple::ShaderProgram shader_program{vertex_shader, fragment_shader};
 
-    simple::InstancedMesh mesh{Cube::vertex_positions, Cube::vertex_normals, Cube::vertex_uvs, Cube::indices};
+    Simple::InstancedMesh mesh{Cube::vertex_positions, Cube::vertex_normals, Cube::vertex_uvs, Cube::indices};
 
     std::array<glm::vec3, 27> instance_offsets {};
     {

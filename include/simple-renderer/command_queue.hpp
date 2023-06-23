@@ -10,7 +10,7 @@
 #include <utility>
 #include <tuple>
 
-namespace simple {
+namespace Simple {
 
 namespace impl {
 struct ClearVector {

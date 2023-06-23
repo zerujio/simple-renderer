@@ -1,6 +1,6 @@
 #include "simple-renderer/glsl_definitions.hpp"
 
-namespace simple {
+namespace Simple {
 
     using namespace GL;
 
