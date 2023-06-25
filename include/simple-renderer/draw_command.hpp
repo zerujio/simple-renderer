@@ -6,9 +6,6 @@
 #include <cstdint>
 #include <utility>
 
-struct GladGLContext;
-using GLContext = GladGLContext;
-
 namespace Simple {
 
 enum class DrawMode
@@ -44,7 +41,7 @@ struct DrawCommand
     {}
 
     /// invoke the corresponding OpenGL command
-    virtual void operator()(const GLContext &context) const = 0;
+    virtual void operator()() const = 0;
 
     DrawMode mode{DrawMode::points};
 };
@@ -58,7 +55,7 @@ struct DrawArraysCommand : DrawCommand
             DrawCommand(draw_mode), first(first_index), count(index_count)
     {}
 
-    void operator()(const GLContext &context) const override;
+    void operator()() const override;
 
     std::uint32_t first{0};
     std::uint32_t count{0};
@@ -74,7 +71,7 @@ struct DrawElementsCommand : DrawCommand
             DrawCommand(draw_mode), count(index_count), type(index_type), offset(index_buffer_offset)
     {}
 
-    void operator()(const GLContext &context) const override;
+    void operator()() const override;
 
     std::uint32_t count{0};
     IndexType type{IndexType::unsigned_int};
@@ -106,7 +103,7 @@ struct DrawArraysInstancedCommand : DrawArraysCommand, InstancedDrawCommand
             : DrawArraysCommand(draw_arrays), InstancedDrawCommand(instance_count)
     {}
 
-    void operator()(const GLContext &context) const override;
+    void operator()() const override;
 };
 
 struct DrawElementsInstancedCommand : DrawElementsCommand, InstancedDrawCommand
@@ -123,7 +120,7 @@ struct DrawElementsInstancedCommand : DrawElementsCommand, InstancedDrawCommand
             : DrawElementsCommand(draw_elements), InstancedDrawCommand(instance_count)
     {}
 
-    void operator()(const GLContext &context) const override;
+    void operator()() const override;
 };
 
 using RendererCommandSet = TypeSet<DrawArraysCommand, DrawElementsCommand, DrawArraysInstancedCommand, DrawElementsInstancedCommand>;

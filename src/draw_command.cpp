@@ -4,25 +4,25 @@
 
 namespace Simple {
 
-void DrawArraysCommand::operator()(const GLContext &context) const
+void DrawArraysCommand::operator()() const
 {
-    context.DrawArrays(static_cast<GLenum>(mode), first, count);
+    glDrawArrays(static_cast<GLenum>(mode), static_cast<GLint>(first), static_cast<GLint>(count));
 }
 
-void DrawElementsCommand::operator()(const GLContext &context) const
+void DrawElementsCommand::operator()() const
 {
-    context.DrawElements(static_cast<GLenum>(mode), count, static_cast<GLenum>(type), reinterpret_cast<void*>(offset));
+    glDrawElements(static_cast<GLenum>(mode), static_cast<GLint>(count), static_cast<GLenum>(type), reinterpret_cast<void *>(offset));
 }
 
-void DrawArraysInstancedCommand::operator()(const GLContext &context) const
+void DrawArraysInstancedCommand::operator()() const
 {
-    context.DrawArraysInstanced(static_cast<GLenum>(mode), first, count, instance_count);
+    glDrawArraysInstanced(static_cast<GLenum>(mode), static_cast<GLint>(first), static_cast<GLsizei>(count), static_cast<GLsizei>(instance_count));
 }
 
-void DrawElementsInstancedCommand::operator()(const GLContext &context) const
+void DrawElementsInstancedCommand::operator()() const
 {
-    context.DrawElementsInstanced(static_cast<GLenum>(mode), count, static_cast<GLenum>(type),
-                                   reinterpret_cast<void*>(offset), instance_count);
+    glDrawElementsInstanced(static_cast<GLenum>(mode), static_cast<GLsizei>(count), static_cast<GLenum>(type),
+                            reinterpret_cast<void *>(offset), static_cast<GLsizei>(instance_count));
 }
 
 } // simple

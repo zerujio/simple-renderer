@@ -117,14 +117,16 @@ int main()
 
     glfwInit();
 
+#if GLUTILS_DEBUG
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+#endif
     GLFWwindow* window = glfwCreateWindow(1024, 768, "02 Instanced Mesh", nullptr, nullptr);
     if (!window)
         return -1;
 
     glfwMakeContextCurrent(window);
 
-    if (!GL::loadGLContext(glfwGetProcAddress))
-        throw std::runtime_error("couldn't  load OpenGL context");
+    GL::loadContext(glfwGetProcAddress);
 
     renderLoop(window);
 

@@ -1,5 +1,4 @@
 #include "simple-renderer/renderer.hpp"
-#include "glutils/debug.hpp"
 #include "glutils/gl.hpp" // this header drags gl.h
 
 #include <GLFW/glfw3.h>
@@ -52,12 +51,9 @@ int main()
 
     glfwMakeContextCurrent(window);
 
-    if (!GL::loadGLContext(glfwGetProcAddress)) {
-        std::cerr << "GL function loading failed" << std::endl;
-        return -2;
-    }
+    GL::loadContext(glfwGetProcAddress);
+    GL::enableDebugMessages();
 
-    GL::enableDebugCallback(); // set a debug callback for the current context.
     glfwSetWindowSizeCallback(window, updateResolution);
 
     // Shaders are GLSL code.

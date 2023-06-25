@@ -55,7 +55,7 @@ namespace Simple {
             vert.setSource(strings.size(), strings.data());
             vert.compile();
             if (!vert.getParameter(ShaderHandle::Parameter::compile_status))
-                throw GLError("Vertex shader compilation error: " + vert.getInfoLog());
+                throw Error("Vertex shader compilation error: " + vert.getInfoLog());
         }
 
         Shader frag {ShaderHandle::Type::fragment};
@@ -71,7 +71,7 @@ namespace Simple {
             frag.compile();
             if (!frag.getParameter(ShaderHandle::Parameter::compile_status))
             {
-                throw GLError("Fragment shader compilation error: " + frag.getInfoLog());
+                throw Error("Fragment shader compilation error: " + frag.getInfoLog());
             }
         }
 
@@ -82,7 +82,7 @@ namespace Simple {
         m_program.detachShader(frag);
 
         if (!m_program.getParameter(ProgramHandle::Parameter::link_status))
-            throw GLError("ProgramHandle linking error: " + m_program.getInfoLog());
+            throw Error("ProgramHandle linking error: " + m_program.getInfoLog());
     }
 
 GLuint BaseShaderProgram::getResourceIndex(BaseShaderProgram::Interface interface, const char *name) const

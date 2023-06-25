@@ -16,14 +16,14 @@ namespace Simple {
 
 Renderer::Renderer()
 {
-    gl.Enable(GL_CULL_FACE);
-    gl.Enable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
 }
 
 
 void Renderer::setViewport(glm::ivec2 lower_left, glm::ivec2 top_right)
 {
-    gl.Viewport(lower_left.x, lower_left.y, top_right.x, top_right.y);
+    glViewport(lower_left.x, lower_left.y, top_right.x, top_right.y);
 }
 
 void Renderer::draw(const Drawable &drawable, const ShaderProgram &program, const glm::mat4 &model_transform)
@@ -57,7 +57,7 @@ struct Renderer::CommandSequenceBuilder
 
 void Renderer::finishFrame(const Camera &camera)
 {
-    gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     //gl.PointSize(2.5f);
 
     m_command_queue.forEachCommandType(CommandSequenceBuilder(*this));
@@ -87,11 +87,11 @@ void Renderer::finishFrame(const Camera &camera)
 
         if (uniform_data != bound_uniform)
         {
-            gl.UniformMatrix4fv(model_matrix_def.layout.location, 1, false, glm::value_ptr(*uniform_data));
+            glUniformMatrix4fv(model_matrix_def.layout.location, 1, false, glm::value_ptr(*uniform_data));
             bound_uniform = uniform_data;
         }
 
-        (*command)(gl);
+        (*command)();
     }
 
     m_command_queue.clear();

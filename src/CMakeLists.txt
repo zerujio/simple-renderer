@@ -11,7 +11,7 @@ add_library(simple-renderer
         vertex_buffer.cpp
         buffer_range.cpp
         allocation_registry.cpp
-        vertex_attribute_specification.cpp texture_2d.cpp image_data.cpp)
+        vertex_attribute_specification.cpp texture_2d.cpp image_data.cpp buffer.cpp buffer.hpp)
 
 target_include_directories(simple-renderer PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(simple-renderer PUBLIC glm glutils PRIVATE stb_image)
