@@ -20,37 +20,52 @@ constexpr std::size_t vertex_stride = std::max(sizeof(T), alignof(T));
 
 template<typename...> class VertexBuffer;
 
-/// A reference to a buffer range which contains a contiguous array of elements of type @p T
+/// A reference to a range within a vertex buffer.
 template<typename T>
 class VertexDataRange final
 {
     static_assert(is_vertex_data_type<T>);
-
-    template<typename ...> friend class VertexBuffer;
+    static_assert(!std::is_const_v<T>, "unexpected const qualifier");
 
 public:
     using size_t = Buffer::size_t;
-    using BufferRange = BufferRange<true, !std::is_const_v<T>>;
 
-    /// Distance (in bytes) between the start of two consecutive elements in the array.
-    static constexpr size_t stride = std::max(sizeof(T), alignof(T));
+    /// Distance (in bytes) between the start of two consecutive elements in the vertex array.
+    static constexpr size_t stride = vertex_stride<T>;
 
-    /// Creates an invalid range.
+    /// Creates a null handle.
     constexpr VertexDataRange() noexcept = default;
 
-    /// Construct from non-const variant.
-    constexpr explicit VertexDataRange(const VertexDataRange<std::remove_const<T>>& other) noexcept : m_range(other.m_range) {}
+    /// Create a new handle; will be invalid if @p buffer is a null pointer or the pointed-to buffer is invalid.
+    constexpr VertexDataRange(GL::BufferHandle buffer, size_t byte_offset, size_t vertex_count) noexcept
+            : m_buffer(buffer), m_byte_offset(buffer ? byte_offset : 0), m_vertex_count(buffer ? vertex_count : 0)
+    {}
+
+    /// Number of vertices in the referenced buffer section; returns 0 if the handle is null.
+    [[nodiscard]]
+    constexpr size_t getVertexCount() const noexcept { return m_vertex_count; }
+
+    /// Construct a read-only buffer range for the referenced vertex data; the range will be invalid if the handle is invalid.
+    [[nodiscard]]
+    constexpr RBufferRange getBufferRange() const noexcept
+    {
+        return {m_buffer, {m_byte_offset, m_vertex_count * stride}};
+    }
 
     [[nodiscard]]
-    constexpr const BufferRange& getBufferRange() const noexcept { return m_range; }
+    constexpr explicit operator RBufferRange () const { return getBufferRange(); }
+
+    /// True if the handle references a valid Buffer object.
+    [[nodiscard]] constexpr bool isValid() const { return !m_buffer.isZero(); }
+    [[nodiscard]] constexpr explicit operator bool() const { return isValid(); }
 
 private:
-    constexpr explicit VertexDataRange(const BufferRange& range) noexcept : m_range(range) {}
-
-    BufferRange m_range;
+    GL::BufferHandle m_buffer {};
+    size_t m_byte_offset {0};
+    size_t m_vertex_count {0};
 };
 
-
+/// Used to initialize the contents of a vertex buffer.
 template<typename T>
 struct VertexDataInitializer final
 {
@@ -108,24 +123,30 @@ class VertexBuffer final
 public:
     using size_t = Buffer::size_t;
 
-    template<size_t N>
-    using VertexType = std::tuple_element_t<N, std::tuple<Ts...>>;
+    /// Vertex type with index I
+    template<size_t I>
+    using VertexTypeByIndex = std::tuple_element_t<I, std::tuple<Ts...>>;
 
-    template<size_t N>
-    using RangeType = VertexDataRange<VertexType<N>>;
+    /// VertexDataRange type of the vertex type with index I.
+    template<size_t I>
+    using RangeTypeByIndex = VertexDataRange<VertexTypeByIndex<I>>;
 
-    template<size_t N>
-    static constexpr size_t stride_by_index = RangeType<N>::stride;
+    /// Stride of the vertex type with index I
+    template<size_t I>
+    static constexpr size_t stride_by_index = vertex_stride<VertexTypeByIndex<I>>;
 
     /// Number of distinct sections in the buffer.
     static constexpr size_t section_count = sizeof...(Ts);
+
+    /// An empty vertex buffer, with no GPU buffer assigned.
+    constexpr VertexBuffer() noexcept = default;
 
     /// Create a buffer with @p vertex_count value-initialized elements.
     explicit VertexBuffer(size_t vertex_count) : VertexBuffer({Ts(), vertex_count}...) {}
 
     /// Construct from a list of vertex data initializers, one for each section.
     explicit VertexBuffer(VertexDataInitializer<Ts>... initializers)
-        : m_offsets{initializers.size() * decltype(initializers)::stride...},
+        : m_offsets{initializers.size() * decltype(initializers)::stride_by_index...},
           m_sizes{initializers.size()...}
     {
         // determine byte offsets
@@ -161,10 +182,15 @@ public:
     /// Get a VertexDataRange object for the section with the specified index.
     template<size_t I>
     [[nodiscard]]
-    RangeType<I> getSection() const
+    RangeTypeByIndex<I> getSectionRange() const noexcept
     {
-        return RangeType<I>{m_buffer.makeRWRange(std::get<I>(m_offsets), std::get<I>(m_sizes) * stride_by_index<I>)};
+        return {m_buffer, std::get<I>(m_offsets), std::get<I>(m_sizes)};
     }
+
+    /// Get the number of vertices in the i-th section.
+    template<size_t I>
+    [[nodiscard]]
+    constexpr size_t getSectionSize() const noexcept { return std::get<I>(m_sizes); }
 
 private:
     using SectionArray = std::array<size_t, section_count>;
@@ -172,6 +198,57 @@ private:
     SectionArray m_offsets;    ///< byte offset for each section
     SectionArray m_sizes;    ///< element count for each section
     Buffer m_buffer;
+};
+
+/// Single type vertex buffer.
+template<typename T>
+class VertexBuffer<T> final
+{
+public:
+    static_assert(is_vertex_data_type<T>);
+    static_assert(!std::is_const_v<T>, "unexpected const qualifier");
+
+    using size_t = Buffer::size_t;
+
+    using VertexType = T;
+    using RangeType = VertexDataRange<T>;
+    static constexpr size_t stride = vertex_stride<T>;
+    static constexpr size_t section_count = 1;
+
+    template<size_t I> using VertexTypeByIndex = std::enable_if_t<I == 0, VertexType>;
+    template<size_t I> using RangeTypeByIndex = VertexDataRange<VertexTypeByIndex<I>>;
+    template<size_t I> static size_t stride_by_index;
+    template<> static constexpr size_t stride_by_index<0> = stride;
+
+    constexpr VertexBuffer() noexcept = default;
+
+    VertexBuffer(size_t vertex_count, const T& value) : VertexBuffer({vertex_count, value}) {}
+
+    template<typename ContiguousIterator>
+    VertexBuffer(ContiguousIterator begin, ContiguousIterator end) : VertexBuffer({begin, end}) {}
+
+    explicit VertexBuffer(VertexDataInitializer<T> initializer)
+    {
+        std::vector<T> vector;
+        vector.resize(initializer.size());
+        initializer(vector.data());
+        m_buffer = Buffer(initializer.size() * stride, vector.data());
+    }
+
+    [[nodiscard]] constexpr size_t getSize() const noexcept { return m_vertex_count; }
+    [[nodiscard]] constexpr RangeType getRange() const noexcept { return {m_buffer, 0, m_vertex_count}; }
+
+    template<size_t I = 0>
+    [[nodiscard]]
+    RangeTypeByIndex<I> getSectionRange() const noexcept { static_assert(I == 0); return getRange(); }
+
+    template<size_t I = 0>
+    [[nodiscard]]
+    constexpr size_t getSectionSize() const noexcept { static_assert(I == 0); return getSize(); }
+
+private:
+    size_t m_vertex_count {0};
+    Buffer m_buffer {};
 };
 
 } // Simple::Renderer

@@ -5,8 +5,6 @@
 
 #include <cstdint>
 #include <type_traits>
-#include <string>
-#include <stdexcept>
 
 namespace Simple::Renderer {
 
@@ -74,8 +72,6 @@ class BufferRange final
     static_assert(Read || Write);
 
 public:
-    friend class Buffer;
-
     template<bool R, bool W>
     friend class BufferRange;
 
@@ -89,6 +85,9 @@ public:
     explicit constexpr BufferRange(const BufferRange<R, W> &other) noexcept
         : m_range(other.getRange()), m_buffer(other.m_buffer)
     {}
+
+    /// Construct from a native buffer handle and a memory range.
+    constexpr BufferRange(GL::BufferHandle handle, MemoryRange range) noexcept : m_range(range), m_buffer(handle) {}
 
     [[nodiscard]]
     constexpr const MemoryRange& getMemoryRange() const { return m_range; }
@@ -131,8 +130,6 @@ public:
     }
 
 private:
-    constexpr BufferRange(GL::BufferHandle handle, MemoryRange range) noexcept : m_range(range), m_buffer(handle) {}
-
     MemoryRange m_range;
     GL::BufferHandle m_buffer;
 };
@@ -146,29 +143,33 @@ using RBufferRange = BufferRange<true, false>;
 /// Buffer range with write-only access.
 using WBufferRange = BufferRange<false, true>;
 
-/// A GPU memory buffer of fixed size.
+/// Manages a GPU memory buffer of fixed size.
 class Buffer final
 {
 public:
     using size_t = std::size_t;
 
-    /// Creates an empty Buffer object, which is not associated with an OpenGL buffer.
+    /// Creates an invalid Buffer object, which is not associated with any GPU buffer.
     constexpr Buffer() = default;
 
     /**
      * @brief Construct a buffer of the specified size.
      * @param size The size of the buffer, in bytes.
-     * @param data The data to initialize the buffer with. If null, the buffer's contents will be uninitialized.
+     * @param data The data to initialize the buffer with. If null, the buffer's contents will be left uninitialized.
      * If buffer allocation fails an empty buffer object will be created.
      */
     explicit Buffer(size_t size, void *data = nullptr);
 
-    /// Returns the size of the buffer in bytes.
+    /**
+     * @brief Retrieve the size of the underlying buffer object.
+     * @return Size of the buffer data store, in bytes, or zero if *this has no associated GPU buffer.
+     */
     [[nodiscard]]
-    constexpr size_t getSize() const noexcept
-    {
-        return m_size;
-    }
+    constexpr size_t getSize() const noexcept { return m_size; }
+
+    /// Returns true if *this has an associated GPU buffer.
+    [[nodiscard]] constexpr bool isValid() const { return !m_buffer.isZero(); }
+    [[nodiscard]] constexpr explicit operator bool() const { return isValid(); }
 
     /// Get range within the buffer; returns an invalid range if offset + size exceeds the buffer size.
     template<bool R, bool W>
@@ -222,6 +223,9 @@ public:
      * will result in a no-op and possibly an exception for DEBUG builds; otherwise behavior is undefined.
      */
     static void copy(RBufferRange from, WBufferRange to);
+
+    /// Returns the OpenGL handle for the GPU buffer.
+    [[nodiscard]] GL::BufferHandle getGLHandle() const { return m_buffer; }
 
 private:
     GL::Buffer m_buffer {};
