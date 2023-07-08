@@ -10,22 +10,20 @@
 
 namespace Simple::Renderer {
 
-/// True if @p T is a data type which may be stored in a GPU buffer.
-template<typename T>
-constexpr bool is_vertex_data_type =
-        std::is_standard_layout_v<T> && !std::is_pointer_v<T> && !std::is_member_pointer_v<T>;
-
-template<typename T>
-constexpr std::size_t vertex_stride = std::max(sizeof(T), alignof(T));
-
 template<typename...> class VertexBuffer;
 
-/// A reference to a range within a vertex buffer.
+/**
+ * @brief A reference to a section within a vertex buffer.
+ * @tparam T The data type of the vertices in the section.
+ *
+ * @warning This is a non-owning reference. Accessing the vertex data after the VertexBuffer it belongs to has been
+ * deleted is undefined behavior.
+ */
 template<typename T>
 class VertexDataRange final
 {
     static_assert(is_vertex_data_type<T>);
-    static_assert(!std::is_const_v<T>, "unexpected const qualifier");
+    static_assert(!std::is_const_v<T>, "invalid const qualifier");
 
 public:
     using size_t = Buffer::size_t;
