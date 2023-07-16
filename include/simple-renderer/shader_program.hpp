@@ -6,7 +6,7 @@
 
 #include <stdexcept>
 
-namespace Simple {
+namespace Simple::Renderer {
 
 class BaseShaderProgram
 {
@@ -353,7 +353,7 @@ protected:
 /// Holds the data for a shader program.
 class ShaderProgram final : public BaseShaderProgram
 {
-    friend class Renderer;
+    friend class Context;
 
 public:
     /// Compile and link a new GLSL shader program.
@@ -383,6 +383,6 @@ public:
     {}
 };
 
-} // simple
+} // Simple::Renderer
 
 #endif //SIMPLERENDERER_SHADER_PROGRAM_HPP

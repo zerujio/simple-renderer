@@ -21,12 +21,30 @@ struct TypedRange
     /// Constructs an empty range (zero size and offset).
     constexpr TypedRange() noexcept = default;
 
+    /// default copy constructor
+    constexpr TypedRange(const TypedRange&) noexcept = default;
+
     /// Construct a range with specified offset and size.
     constexpr TypedRange(Offset offset, size_t size) noexcept: offset(offset), size(size)
     {}
 
     constexpr TypedRange(size_t offset, size_t size) noexcept: offset(offset), size(size)
     {}
+
+    /// Explicit conversion to byte range.
+    template<typename Y,
+            std::enable_if_t<std::is_same_v<T, std::byte> && !std::is_same_v<Y, std::byte>, int> = 0>
+    constexpr explicit TypedRange(const TypedRange<Y>& other) noexcept:
+            offset(static_cast<TypedOffset<std::byte>>(other.offset)), size(other.size * sizeof(Y))
+    {}
+
+    /// Explicit conversion from byte range to other type.
+    template<typename Y,
+            std::enable_if_t<std::is_same_v<T, std::byte> && !std::is_same_v<Y, std::byte>, int> = 0>
+    constexpr explicit operator TypedRange<Y>() const
+    {
+        return {static_cast<TypedOffset<Y>>(offset), size / sizeof(T)};
+    }
 
     /// Checks if the size is zero.
     [[nodiscard]] constexpr bool isEmpty() const noexcept

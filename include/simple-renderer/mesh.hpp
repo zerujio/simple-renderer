@@ -1,23 +1,14 @@
 #ifndef SIMPLERENDERER_MESH_HPP
 #define SIMPLERENDERER_MESH_HPP
 
-#include "drawable.hpp"
-#include "vertex_attribute_specification.hpp"
-#include "vertex_buffer.hpp"
-
-#include "glutils/guard.hpp"
-#include "glutils/buffer.hpp"
-#include "glutils/gl_types.hpp"
+#include "simple-renderer/drawable.hpp"
+#include "simple-renderer/vertex_buffer.hpp"
+#include "simple-renderer/vertex_array.hpp"
 
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
-#include "glm/vec4.hpp"
-#include "vertex_data_loader.hpp"
 
-#include <vector>
-#include <map>
-
-namespace Simple {
+namespace Simple::Renderer {
 
 /// Base class for renderer-able meshes.
 class Mesh : public Drawable
@@ -37,30 +28,20 @@ public:
     /// Does this mesh use indexed drawing?
     [[nodiscard]] bool isIndexed() const { return m_use_index_buffer; }
 
-protected:
-    template<typename CommandType>
-    void m_emplaceDrawCommand(const CommandCollector& collector, CommandType&& command) const
-    { m_vertex_specification.emplaceDrawCommand(collector, std::forward<CommandType>(command)); }
-
+private:
     [[nodiscard]] DrawElementsCommand m_createDrawElementsCommand() const;
     [[nodiscard]] DrawArraysCommand m_createDrawArraysCommand() const;
 
-    [[nodiscard]] VertexAttributeSpecification& m_getVertexAttributes() { return m_vertex_specification; }
-    [[nodiscard]] const VertexAttributeSpecification& m_getVertexAttributes() const { return m_vertex_specification; }
-
-private:
     DrawMode m_draw_mode{DrawMode::triangles};
-    VertexAttributeSpecification m_vertex_specification;
-    VertexBuffer m_vertex_buffer;
-    std::uint32_t m_index_count;
-    union
-    {
-        std::uint32_t m_first_index;
-        std::uintptr_t m_index_buffer_offset;
-    };
+
+    VertexBuffer<glm::vec3, glm::vec3, glm::vec2, unsigned int> m_vertex_buffer;
+    VertexArray m_vertex_array;
+
     bool m_use_index_buffer;
+    std::uint32_t m_index_count;
+    std::uint32_t m_first_index;
 };
 
-} // simple
+} // Simple::Renderer
 
 #endif //SIMPLERENDERER_MESH_HPP

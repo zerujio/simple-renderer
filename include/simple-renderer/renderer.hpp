@@ -19,13 +19,13 @@
 
 #include <vector>
 
-namespace Simple {
+namespace Simple::Renderer {
 
 /// Performs rendering operations.
-class Renderer
+class Context
 {
 public:
-    Renderer();
+    Context();
 
     /**
      * @brief enqueue a draw command.
@@ -67,6 +67,6 @@ private:
     struct CommandSequenceBuilder;
 };
 
-} // simple
+}//Simple::Renderer
 
 #endif //SIMPLERENDERER_RENDERER_HPP

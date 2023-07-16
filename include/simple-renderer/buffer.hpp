@@ -7,6 +7,15 @@
 
 namespace Simple::Renderer {
 
+template<typename>
+class BufferRange;
+
+template<typename T>
+constexpr bool operator==(const BufferRange<T> &, const BufferRange<T> &) noexcept;
+
+template<typename T>
+constexpr bool operator!=(const BufferRange<T> &, const BufferRange<T> &) noexcept;
+
 /**
  * @brief A TypedRange paired with the buffer it belongs to.
  * @tparam T The type of the values contained within the buffer range. If const-qualified, indicates a read-only
@@ -16,32 +25,43 @@ template<typename T = std::byte>
 class BufferRange final
 {
 public:
+    template<typename> friend class BufferRange;
     friend class Buffer;
+    friend class VertexArray;
 
-    using TypedOffset = TypedOffset<std::remove_const_t<T>>;
-    using TypedRange = TypedRange<std::remove_const_t<T>>;
-    using size_t = typename TypedOffset::size_t;
+    using Offset = TypedOffset<std::remove_const_t<T>>;
+    using Range = TypedRange<std::remove_const_t<T>>;
+    using size_t = typename Offset::size_t;
 
     /// Constructs a range with zero size, zero offset and no buffer.
     constexpr BufferRange() noexcept = default;
 
     /// Construct from a native buffer handle and a typed range.
-    constexpr BufferRange(GL::BufferHandle handle, TypedRange range) noexcept: m_range(range), m_buffer(handle)
+    constexpr BufferRange(GL::BufferHandle handle, Range range) noexcept: m_range(range), m_buffer(handle)
     {}
 
-    /// implicit conversion from non-cost variant
-    constexpr BufferRange(const BufferRange<std::remove_const<T>> &mutable_range) noexcept: BufferRange()
+    constexpr BufferRange(const BufferRange &) noexcept = default;
+
+    /// BufferRange<Y> can be implicitly converted to BufferRange<T> if their respective TypedRange types are
+    /// implicitly convertible and the const qualifiers are compatible.
+    template<typename Y,
+            std::enable_if_t<
+                    std::is_convertible_v<typename BufferRange<Y>::Range, Range>
+                    && (!std::is_const_v<Y> || std::is_const_v<T>),
+                    int> = 0>
+    constexpr BufferRange(const BufferRange<Y> &other) noexcept:
+            m_range(other.getTypedRange()), m_buffer(other.m_buffer)
     {}
 
-    /// implicit conversion to const variant
-    constexpr operator BufferRange<std::add_const_t<T>> () const noexcept
-    {
-        return {m_buffer, m_range};
-    }
+    /// explicit conversion if the typed ranges are convertible and the const qualifiers are compatible
+    template<typename Y, std::enable_if_t<!std::is_const_v<Y> || std::is_const_v<T>, int> = 0>
+    constexpr explicit BufferRange(const BufferRange<Y> &other) noexcept:
+            m_range(static_cast<Range>(other.getTypedRange())), m_buffer(other.m_buffer)
+    {}
 
     /// Get this buffer range's TypedRange object.
     [[nodiscard]]
-    constexpr const TypedRange &getTypedRange() const
+    constexpr const Range &getTypedRange() const
     { return m_range; }
 
     /// The number of values of type @p T contained within the range described by *this.
@@ -64,9 +84,9 @@ public:
 
     /// Construct a sub range within the same buffer.
     [[nodiscard]]
-    constexpr BufferRange sub(TypedOffset relative_offset, size_t new_size) const noexcept
+    constexpr BufferRange sub(Offset relative_offset, size_t new_size) const noexcept
     {
-        const TypedRange result = m_range.sub(relative_offset, new_size);
+        const Range result = m_range.sub(relative_offset, new_size);
 
         if (result)
             return {m_buffer, result};
@@ -91,12 +111,12 @@ public:
         return {l.m_buffer, mem_range};
     }
 
-    friend bool operator==(const BufferRange &, const BufferRange &);
+    friend constexpr bool operator==<T>(const BufferRange &, const BufferRange &) noexcept;
 
-    friend bool operator!=(const BufferRange &, const BufferRange &);
+    friend constexpr bool operator!=<T>(const BufferRange &, const BufferRange &) noexcept;
 
 private:
-    TypedRange m_range;
+    Range m_range;
     GL::BufferHandle m_buffer;
 };
 
@@ -190,14 +210,11 @@ public:
      * will result in a no-op and possibly an exception for DEBUG builds; otherwise behavior is undefined.
      */
     template<typename T>
-    static void copy(const ConstBufferRange<T>& from, const BufferRange<T>& to)
+    static void copy(const ConstBufferRange<T> &from, const BufferRange<T> &to)
     {
         copy(static_cast<BufferRange<const std::byte>>(from),
              static_cast<BufferRange<std::byte>>(to));
     }
-
-    template<>
-    void copy(const ConstBufferRange<std::byte>& from, const BufferRange<std::byte>& to);
 
     /// Returns the OpenGL handle for the GPU buffer.
     [[nodiscard]] GL::BufferHandle getGLHandle() const
@@ -207,6 +224,9 @@ private:
     GL::Buffer m_buffer{};
     size_t m_size{0};   ///< size of the buffer in bytes
 };
+
+template<>
+void Buffer::copy(const ConstBufferRange<std::byte> &from, const BufferRange<std::byte> &to);
 
 } // Simple::Renderer
 

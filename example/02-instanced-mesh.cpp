@@ -5,6 +5,7 @@
 
 #include "glutils/gl.hpp"
 #include "GLFW/glfw3.h"
+#include "renderer.hpp"
 
 #include <iostream>
 #include <array>
@@ -18,7 +19,7 @@ struct {
 
 void updateResolution(GLFWwindow* window, int width, int height)
 {
-    Simple::Renderer::setViewport(glm::ivec2(), glm::ivec2(width, height));
+    Simple::Simple::Renderer::Context::setViewport(glm::ivec2(), glm::ivec2(width, height));
 
     if (s_camera.ptr)
         s_camera.ptr->setProjectionMatrix(glm::perspectiveFov(s_camera.fov, float(width), float(height),
@@ -66,7 +67,7 @@ void main()
 
 void renderLoop(GLFWwindow* window)
 {
-    Simple::Renderer renderer;
+    Simple::Simple::Renderer::Context renderer;
 
     Simple::Camera camera;
     s_camera.ptr = &camera;

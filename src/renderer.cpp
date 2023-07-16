@@ -11,22 +11,22 @@
 
 using namespace GL;
 
-namespace Simple {
+namespace Simple::Renderer {
 
 
-Renderer::Renderer()
+Context::Context()
 {
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 }
 
 
-void Renderer::setViewport(glm::ivec2 lower_left, glm::ivec2 top_right)
+void Context::setViewport(glm::ivec2 lower_left, glm::ivec2 top_right)
 {
     glViewport(lower_left.x, lower_left.y, top_right.x, top_right.y);
 }
 
-void Renderer::draw(const Drawable &drawable, const ShaderProgram &program, const glm::mat4 &model_transform)
+void Context::draw(const Drawable &drawable, const ShaderProgram &program, const glm::mat4 &model_transform)
 {
     const std::size_t uniform_data_index = m_uniform_data.size();
     m_uniform_data.emplace_back(model_transform);
@@ -34,9 +34,9 @@ void Renderer::draw(const Drawable &drawable, const ShaderProgram &program, cons
     drawable.collectDrawCommands(CommandCollector(m_command_queue, uniform_data_index, program.m_program));
 }
 
-struct Renderer::CommandSequenceBuilder
+struct Context::CommandSequenceBuilder
 {
-    CommandSequenceBuilder(Renderer &renderer) : renderer(renderer)
+    CommandSequenceBuilder(Context &renderer) : renderer(renderer)
     {}
 
     template<typename Command>
@@ -52,10 +52,10 @@ struct Renderer::CommandSequenceBuilder
         }
     }
 
-    Renderer &renderer;
+    Context &renderer;
 };
 
-void Renderer::finishFrame(const Camera &camera)
+void Context::finishFrame(const Camera &camera)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     //gl.PointSize(2.5f);
@@ -99,4 +99,4 @@ void Renderer::finishFrame(const Camera &camera)
     m_uniform_data.clear();
 }
 
-} // simple
+} // Simple::Renderer

@@ -6,12 +6,12 @@
 
 #include <glm/mat4x4.hpp>
 
-namespace Simple {
+namespace Simple::Renderer {
 
 /// Encapsulates camera related data.
 class Camera
 {
-    friend class Renderer;
+    friend class Context;
 
 public:
     Camera();
@@ -28,6 +28,6 @@ private:
     GL::Buffer m_buffer;
 };
 
-} // simple
+} // Simple::Renderer
 
 #endif //SIMPLERENDERER_CAMERA_HPP

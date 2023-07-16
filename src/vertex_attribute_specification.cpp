@@ -73,7 +73,7 @@ void VertexAttributeSpecification::m_bindAttribute(std::uint32_t attribute_locat
 {
     m_vertex_array.bindAttribute(attribute_location, buffer_binding);
 
-    using BaseType = GL::VertexAttributeBaseType;
+    using BaseType = GL::VertexAttributeType;
     switch (attribute.base_type)
     {
         case BaseType::_double:

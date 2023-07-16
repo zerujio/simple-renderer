@@ -8,7 +8,7 @@
 #include <array>
 #include <iostream>
 
-namespace Simple {
+namespace Simple::Renderer {
 
     using namespace GL;
 
@@ -94,4 +94,4 @@ BaseShaderProgram::UniformLocation BaseShaderProgram::getUniformLocation(const c
 {
     return UniformLocation{m_program.getResourceLocation(Interface::uniform, name)};
 }
-} // simple
+} // Simple::Renderer

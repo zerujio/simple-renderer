@@ -7,7 +7,7 @@
 
 #include <array>
 
-namespace Simple {
+namespace Simple::Renderer {
 
 constexpr auto mat4_size = sizeof(glm::mat4);
 
@@ -32,4 +32,4 @@ void Camera::bindUniformBlock() const
     glBindBufferBase(GL_UNIFORM_BUFFER, camera_uniform_block_def.layout.binding, m_buffer.getName());
 }
 
-} // simple
+} // Simple::Renderer
