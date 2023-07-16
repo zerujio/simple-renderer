@@ -4,10 +4,10 @@
 
 namespace Simple::Renderer {
 
-Buffer::Buffer(Buffer::size_t size, void *data) : m_size(m_buffer ? size : 0)
+Buffer::Buffer(Buffer::size_t size, void *data) : m_buffer(), m_size(m_buffer ? size : 0)
 {
     if (!m_buffer)
-        return;
+        throw std::runtime_error("GL buffer object creation failed");
 
     m_buffer.allocateImmutable(static_cast<GLsizeiptr>(size), GL::Buffer::StorageFlags::none, data);
 }

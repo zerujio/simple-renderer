@@ -25,8 +25,11 @@ template<typename T = std::byte>
 class BufferRange final
 {
 public:
-    template<typename> friend class BufferRange;
+    template<typename> friend
+    class BufferRange;
+
     friend class Buffer;
+
     friend class VertexArray;
 
     using Offset = TypedOffset<std::remove_const_t<T>>;
@@ -221,7 +224,7 @@ public:
     { return m_buffer; }
 
 private:
-    GL::Buffer m_buffer{};
+    GL::Buffer m_buffer{GL::BufferHandle()};
     size_t m_size{0};   ///< size of the buffer in bytes
 };
 
