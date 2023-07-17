@@ -49,7 +49,7 @@ public:
 
     /// Emplace a command using this vertex batch.
     template<typename Command>
-    void emplaceDrawCommand(const Drawable::CommandCollector &collector, Command &&command) const
+    void emplaceDrawCommand(const Renderer::Drawable::CommandCollector &collector, Command &&command) const
     { collector.emplace(std::forward<Command>(command), m_vertex_array); }
 
 private:

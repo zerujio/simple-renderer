@@ -8,7 +8,58 @@
 
 namespace Simple {
 
+namespace Renderer
+{
+
+template<typename AttribType>
 class InstancedMesh : public Mesh
+{
+public:
+
+    template<typename SourceType, typename ... ExtraArgs>
+    InstancedMesh(Mesh&& mesh, AttribIndex attrib_index, VertexDataInitializer<SourceType> instance_initializer,
+                  std::uint32_t instance_divisor, ExtraArgs ... extra_args) :
+            Mesh(std::move(mesh)),
+            m_instance_buffer(instance_initializer),
+            m_instance_count(instance_initializer.size() / instance_divisor),
+            m_instance_divisor(instance_divisor)
+    {
+        if (instance_divisor == 0)
+            throw std::logic_error("instance_divisor is zero");
+
+        constexpr BufferIndex buffer_index = BufferIndex(3); // indices 0 to 2 are occupied by positions, normals and uvs
+        m_vertex_array.bindVertexBufferAttribute<AttribType>(buffer_index, m_instance_buffer.getBufferRange(), attrib_index,
+                                                             extra_args...);
+        m_vertex_array.setVertexBufferInstanceDivisor(buffer_index, instance_divisor);
+    }
+
+    [[nodiscard]] std::uint32_t getInstanceCount() { return m_instance_count; }
+    [[nodiscard]] std::uint32_t getInstanceDivisor() { return m_instance_divisor; }
+
+protected:
+    void collectDrawCommands(const CommandCollector &collector) const override
+    {
+        if (isIndexed())
+        {
+            collector.emplace(DrawElementsInstancedCommand{m_createDrawElementsCommand(), m_instance_count * m_instance_divisor},
+                              m_vertex_array.getGLObject());
+        }
+        else
+        {
+            collector.emplace(DrawArraysInstancedCommand(m_createDrawArraysCommand(), m_instance_count * m_instance_divisor),
+                              m_vertex_array.getGLObject());
+        }
+    }
+
+private:
+    VertexBuffer<AttribType> m_instance_buffer;
+    std::uint32_t m_instance_count{0};
+    std::uint32_t m_instance_divisor{0};
+};
+
+} // namespace Renderer
+
+class [[deprecated]] InstancedMesh : public Mesh
 {
 public:
     using Mesh::Mesh;

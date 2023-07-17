@@ -84,7 +84,7 @@ DrawArraysCommand Mesh::m_createDrawArraysCommand() const
 namespace Renderer {
 
 template<typename AttributeType, std::size_t SectionIndex>
-void Mesh::bindAttributes(uint attrib_index)
+void Mesh::m_bindAttribute(uint attrib_index)
 {
     constexpr BufferIndex buffer_index {SectionIndex};
     m_vertex_array.bindVertexBufferAttribute<AttributeType>(buffer_index,
@@ -108,16 +108,16 @@ Mesh::Mesh(VertexDataInitializer<glm::vec3> positions, VertexDataInitializer<glm
     if (uvs.size() != 0 && positions.size() != uvs.size())
         throw std::logic_error("different number of positions and UVs");
 
-    bindAttributes<glm::vec3, 0>(vertex_position_def.layout.location);
+    m_bindAttribute<glm::vec3, 0>(vertex_position_def.layout.location);
 
     if (normals)
     {
-        bindAttributes<glm::vec3, 1>(vertex_normal_def.layout.location);
+        m_bindAttribute<glm::vec3, 1>(vertex_normal_def.layout.location);
     }
 
     if (uvs)
     {
-        bindAttributes<glm::vec2, 2>(vertex_uv_def.layout.location);
+        m_bindAttribute<glm::vec2, 2>(vertex_uv_def.layout.location);
     }
 
     // indices
@@ -142,13 +142,13 @@ void Mesh::collectDrawCommands(const Drawable::CommandCollector &collector) cons
 
 DrawElementsCommand Mesh::m_createDrawElementsCommand() const
 {
-    return {m_draw_mode, m_index_count, IndexType::unsigned_int,
+    return {draw_mode, m_index_count, IndexType::unsigned_int,
             m_vertex_buffer.getTypedRange<3>().offset.get()};
 }
 
 DrawArraysCommand Mesh::m_createDrawArraysCommand() const
 {
-    return {m_draw_mode, m_first_index, m_index_count};
+    return {draw_mode, m_first_index, m_index_count};
 }
 
 }// namespace Renderer

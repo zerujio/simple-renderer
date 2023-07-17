@@ -254,7 +254,7 @@ public:
     [[nodiscard]] constexpr BufferRangeType getBufferRange() const noexcept
     {
         static_assert(I == 0, "section index out of range");
-        return {m_buffer, getTypedRange()};
+        return {m_buffer.getGLHandle(), getTypedRange()};
     }
 
     [[nodiscard]] constexpr size_t getSize() const noexcept

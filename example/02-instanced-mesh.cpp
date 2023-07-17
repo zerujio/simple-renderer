@@ -5,7 +5,6 @@
 
 #include "glutils/gl.hpp"
 #include "GLFW/glfw3.h"
-#include "renderer.hpp"
 
 #include <iostream>
 #include <array>
@@ -14,12 +13,12 @@ struct {
     float fov = glm::pi<float>() / 2.0f;
     float far = 100.0f;
     float near = 0.01f;
-    Simple::Camera* ptr = nullptr;
+    Simple::Renderer::Camera* ptr = nullptr;
 } s_camera;
 
 void updateResolution(GLFWwindow* window, int width, int height)
 {
-    Simple::Simple::Renderer::Context::setViewport(glm::ivec2(), glm::ivec2(width, height));
+    Simple::Renderer::Context::setViewport(glm::ivec2(), glm::ivec2(width, height));
 
     if (s_camera.ptr)
         s_camera.ptr->setProjectionMatrix(glm::perspectiveFov(s_camera.fov, float(width), float(height),
@@ -67,9 +66,9 @@ void main()
 
 void renderLoop(GLFWwindow* window)
 {
-    Simple::Simple::Renderer::Context renderer;
+    Simple::Renderer::Context renderer;
 
-    Simple::Camera camera;
+    Simple::Renderer::Camera camera;
     s_camera.ptr = &camera;
     camera.setViewMatrix(glm::lookAt(glm::vec3(5.0f, 5.0f, 5.0f), {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}));
     {
@@ -79,9 +78,7 @@ void renderLoop(GLFWwindow* window)
                                                        s_camera.near, s_camera.far));
     }
 
-    Simple::ShaderProgram shader_program{vertex_shader, fragment_shader};
-
-    Simple::InstancedMesh mesh{Cube::vertex_positions, Cube::vertex_normals, Cube::vertex_uvs, Cube::indices};
+    Simple::Renderer::ShaderProgram shader_program{vertex_shader, fragment_shader};
 
     std::array<glm::vec3, 27> instance_offsets {};
     {
@@ -94,8 +91,13 @@ void renderLoop(GLFWwindow* window)
                     instance_offsets[i++] = {x, y, z};
     }
 
-    mesh.addInstanceData(4, 1, instance_offsets);
-    mesh.setInstanceCount(instance_offsets.size());
+    Simple::Renderer::InstancedMesh<glm::vec3> mesh
+    {
+            Simple::Renderer::Mesh{Cube::vertex_positions, Cube::vertex_normals, Cube::vertex_uvs, Cube::indices},
+            Simple::Renderer::AttribIndex(4),
+            Simple::Renderer::VertexDataInitializer<glm::vec3>{instance_offsets},
+            1
+    };
 
     while (!glfwWindowShouldClose(window))
     {

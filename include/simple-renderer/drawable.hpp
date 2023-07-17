@@ -7,14 +7,15 @@
 #include "glutils/program.hpp"
 #include "glutils/vertex_array.hpp"
 
-namespace Simple {
+namespace Simple::Renderer {
 
 /// Base class for all objects which may be drawn by the renderer.
 class Drawable
 {
+    friend class Context;
 public:
     using CommandCollector = RendererCommandSet::Instantiate<CommandCollector>;
-
+protected:
     /// Issue the OpenGL commands required to draw the primitives for this object.
     virtual void collectDrawCommands(const CommandCollector& collector) const = 0;
 };
