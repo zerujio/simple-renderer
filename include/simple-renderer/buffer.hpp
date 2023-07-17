@@ -155,7 +155,7 @@ public:
      * @param data The data to initialize the buffer with. If null, the buffer's contents will be left uninitialized.
      * If buffer allocation fails an empty buffer object will be created.
      */
-    explicit Buffer(size_t size, void *data = nullptr);
+    explicit Buffer(size_t size, const void *data = nullptr);
 
     /**
      * @brief Retrieve the size of the underlying buffer object.

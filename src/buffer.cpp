@@ -4,7 +4,7 @@
 
 namespace Simple::Renderer {
 
-Buffer::Buffer(Buffer::size_t size, void *data) : m_buffer(), m_size(m_buffer ? size : 0)
+Buffer::Buffer(Buffer::size_t size, const void *data) : m_buffer(), m_size(m_buffer ? size : 0)
 {
     if (!m_buffer)
         throw std::runtime_error("GL buffer object creation failed");

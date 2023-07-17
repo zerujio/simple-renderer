@@ -85,7 +85,10 @@ public:
     using BufferRangeByIndex = BufferRange<VertexTypeByIndex<I>>;
 
     template<size_t I>
-    using TypedRangeByIndex = TypedRange<VertexTypeByIndex<I>>;
+    using TypedRangeByIndex = typename BufferRangeByIndex<I>::Range;
+
+    template<size_t I>
+    using TypedOffsetByIndex = typename BufferRangeByIndex<I>::Offset;
 
     /// Stride of the vertex type with index I
     template<size_t I>
@@ -188,15 +191,18 @@ public:
     using size_t = Buffer::size_t;
 
     template<size_t I> using VertexTypeByIndex = std::enable_if_t<I == 0, T>;
-    template<size_t I> using TypedRangeByIndex = TypedRange<std::remove_const_t<VertexTypeByIndex<I>>>;
     template<size_t I> using BufferRangeByIndex = BufferRange<VertexTypeByIndex<I>>;
+    template<size_t I> using TypedRangeByIndex = typename BufferRangeByIndex<I>::Range;
+    template<size_t I> using TypedOffsetByIndex = typename BufferRangeByIndex <I>::Offset;
     template<size_t I> static constexpr size_t stride_by_index = sizeof(VertexTypeByIndex<I>);
 
-    using VertexType = T;
-    using RangeType = TypedRange<std::remove_const_t<T>>;
-    using BufferRangeType = BufferRange<T>;
-    static constexpr size_t stride = stride_by_index<0>;
     static constexpr size_t section_count = 1;
+
+    using VertexType = T;
+    using BufferRangeType = BufferRange<T>;
+    using RangeType = typename BufferRangeType::Range;
+    using OffsetType = typename RangeType::Offset;
+    static constexpr size_t stride = stride_by_index<0>;
 
     constexpr VertexBuffer() noexcept = default;
 
@@ -205,7 +211,7 @@ public:
     template<typename ContiguousIterator>
     VertexBuffer(ContiguousIterator begin, ContiguousIterator end) : VertexBuffer({begin, end}) {}
 
-    explicit VertexBuffer(VertexDataInitializer<T> initializer)
+    explicit VertexBuffer(VertexDataInitializer<T> initializer) : m_vertex_count(initializer.size())
     {
         std::vector<T> vector;
         vector.resize(initializer.size());
@@ -213,11 +219,16 @@ public:
         m_buffer = Buffer(initializer.size() * stride, vector.data());
     }
 
+    template<typename Container>
+    explicit VertexBuffer(const Container& container)
+            : m_vertex_count(std::size(container)), m_buffer(m_vertex_count * sizeof(T), std::data(container))
+    {}
+
     template<size_t I = 0>
     [[nodiscard]] constexpr RangeType getTypedRange() const noexcept
     {
         static_assert(I == 0, "section index out of range");
-        return m_vertex_count;
+        return {OffsetType(0), m_vertex_count};
     }
 
     template<size_t I = 0>
@@ -228,6 +239,8 @@ public:
     }
 
     [[nodiscard]] constexpr size_t getSize() const noexcept { return m_buffer.getSize(); }
+
+    [[nodiscard]] const Buffer& getBuffer() const noexcept { return m_buffer; }
 
 private:
     size_t m_vertex_count {0};
