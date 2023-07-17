@@ -72,8 +72,8 @@ public:
     { return m_range.size; }
 
     /// The byte offset of the range, relative to the start of the buffer.
-    [[nodiscard]] constexpr size_t getOffset() const
-    { return m_range.size; }
+    [[nodiscard]] constexpr Offset getOffset() const
+    { return m_range.offset; }
 
     /// A buffer range is considered valid if it references a valid (non-zero) buffer, even if the memory range itself is empty.
     [[nodiscard]]

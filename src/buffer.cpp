@@ -20,8 +20,8 @@ void Buffer::copy<std::byte>(const ConstBufferRange<std::byte>& from, const Buff
         throw std::logic_error("copy between buffer ranges of different size");
 #endif
     GL::Buffer::copy(from.m_buffer, to.m_buffer,
-                     static_cast<GLintptr>(from.getOffset()),
-                     static_cast<GLintptr>(to.getOffset()),
+                     static_cast<GLintptr>(from.getOffset().get()),
+                     static_cast<GLintptr>(to.getOffset().get()),
                      static_cast<GLsizeiptr>(from.getSize()));
 }
 

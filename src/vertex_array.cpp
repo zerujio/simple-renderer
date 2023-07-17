@@ -7,7 +7,7 @@ namespace Simple::Renderer {
 void VertexArray::bindVertexBuffer(BufferIndex buffer_index, ConstBufferRange<std::byte> buffer_range, uint stride) const
 {
     m_gl_object.bindVertexBuffer(buffer_index.value(), buffer_range.m_buffer,
-                                 static_cast<GLintptr>(buffer_range.getOffset()),
+                                 static_cast<GLintptr>(buffer_range.getOffset().get()),
                                  static_cast<GLint>(stride));
 }
 

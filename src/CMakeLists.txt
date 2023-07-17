@@ -7,11 +7,11 @@ add_library(simple-renderer
         glsl_definitions.cpp
         draw_command.cpp
         command_queue.cpp
-        #instanced_mesh.cpp
+        instanced_mesh.cpp
         vertex_buffer.cpp
         buffer_range.cpp
         allocation_registry.cpp
-        #vertex_attribute_specification.cpp
+        vertex_attribute_specification.cpp
         texture_2d.cpp
         image_data.cpp
         buffer.cpp
