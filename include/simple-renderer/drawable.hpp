@@ -12,7 +12,7 @@ namespace Simple::Renderer {
 /// Base class for all objects which may be drawn by the renderer.
 class Drawable
 {
-    friend class Context;
+    friend class RenderQueue;
 public:
     using CommandCollector = RendererCommandSet::Instantiate<CommandCollector>;
 protected:

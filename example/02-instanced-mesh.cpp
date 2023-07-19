@@ -18,7 +18,7 @@ struct {
 
 void updateResolution(GLFWwindow* window, int width, int height)
 {
-    Simple::Renderer::Context::setViewport(glm::ivec2(), glm::ivec2(width, height));
+    Simple::Renderer::RenderQueue::setViewport(glm::ivec2(), glm::ivec2(width, height));
 
     if (s_camera.ptr)
         s_camera.ptr->setProjectionMatrix(glm::perspectiveFov(s_camera.fov, float(width), float(height),
@@ -66,7 +66,7 @@ void main()
 
 void renderLoop(GLFWwindow* window)
 {
-    Simple::Renderer::Context renderer;
+    Simple::Renderer::RenderQueue renderer;
 
     Simple::Renderer::Camera camera;
     s_camera.ptr = &camera;

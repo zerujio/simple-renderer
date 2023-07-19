@@ -11,7 +11,7 @@ namespace Simple::Renderer {
 /// Encapsulates camera related data.
 class Camera
 {
-    friend class Context;
+    friend class RenderQueue;
 
 public:
     Camera();

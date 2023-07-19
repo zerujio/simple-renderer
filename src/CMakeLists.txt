@@ -16,7 +16,8 @@ add_library(simple-renderer
         image_data.cpp
         buffer.cpp
         mesh_descriptor.cpp
-        vertex_array.cpp)
+        vertex_array.cpp
+        render_queue.cpp)
 
 target_include_directories(simple-renderer PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(simple-renderer PUBLIC glm glutils PRIVATE stb_image)

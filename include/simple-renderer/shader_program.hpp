@@ -353,7 +353,7 @@ protected:
 /// Holds the data for a shader program.
 class ShaderProgram final : public BaseShaderProgram
 {
-    friend class Context;
+    friend class RenderQueue;
 
 public:
     /// Compile and link a new GLSL shader program.

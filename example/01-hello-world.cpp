@@ -23,7 +23,7 @@ struct UserData
 void updateResolution(GLFWwindow *window, int width, int height)
 {
     // setViewport operates on the OpenGL context; it does not need a Renderer instance.
-    Simple::Renderer::Context::setViewport(glm::ivec2(), glm::ivec2(width, height));
+    Simple::Renderer::RenderQueue::setViewport(glm::ivec2(), glm::ivec2(width, height));
 
     auto data = static_cast<const UserData *>(glfwGetWindowUserPointer(window));
     data->camera.setProjectionMatrix(glm::perspectiveFov(data->camera_fov,
@@ -96,7 +96,7 @@ int main()
     )glsl";
 
     {
-        Simple::Renderer::Context renderer;
+        Simple::Renderer::RenderQueue renderer;
         Simple::Renderer::Camera camera;
 
         UserData callback_data {glm::pi<float>() / 2.0f, 0.01f, 100.0f, camera};
