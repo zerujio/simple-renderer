@@ -1,8 +1,8 @@
 #ifndef SIMPLERENDERER_VERTEX_ARRAY_HPP
 #define SIMPLERENDERER_VERTEX_ARRAY_HPP
 
-#include "simple-renderer/buffer.hpp"
-#include "simple-renderer/glm_type_traits.hpp"
+#include "simple_renderer/buffer.hpp"
+#include "simple_renderer/glm_type_traits.hpp"
 
 #include "glutils/vertex_array.hpp"
 #include "glutils/vertex_attrib_utils.hpp"

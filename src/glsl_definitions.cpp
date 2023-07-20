@@ -1,4 +1,4 @@
-#include "simple-renderer/glsl_definitions.hpp"
+#include "simple_renderer/glsl_definitions.hpp"
 
 namespace Simple {
 

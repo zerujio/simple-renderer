@@ -1,4 +1,4 @@
-#include "simple-renderer/vertex_buffer.hpp"
+#include "simple_renderer/vertex_buffer.hpp"
 
 namespace Simple {
 

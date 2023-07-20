@@ -1,5 +1,5 @@
-#include "simple-renderer/vertex_attribute_specification.hpp"
-#include "simple-renderer/vertex_buffer.hpp"
+#include "simple_renderer/vertex_attribute_specification.hpp"
+#include "simple_renderer/vertex_buffer.hpp"
 
 #include <algorithm>
 

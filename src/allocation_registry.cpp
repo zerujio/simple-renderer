@@ -1,4 +1,4 @@
-#include "simple-renderer/allocation_registry.hpp"
+#include "simple_renderer/allocation_registry.hpp"
 
 #include <stdexcept>
 #include <algorithm>

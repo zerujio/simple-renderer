@@ -1,4 +1,4 @@
-#include "simple-renderer/buffer.hpp"
+#include "simple_renderer/buffer.hpp"
 
 #include <stdexcept>
 

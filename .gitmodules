@@ -1,9 +1,9 @@
 [submodule "lib/glutils-cpp"]
-	path = lib/glutils-cpp
+	path = external/glutils-cpp
 	url = git@github.com:zerujio/glutils-cpp.git
 [submodule "lib/glfw"]
-	path = lib/glfw
+	path = external/glfw
 	url = https://github.com/glfw/glfw.git
 [submodule "lib/imgui"]
-	path = lib/imgui
+	path = external/imgui
 	url = https://github.com/ocornut/imgui.git

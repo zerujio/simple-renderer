@@ -1,4 +1,4 @@
-#include "simple-renderer/image_data.hpp"
+#include "simple_renderer/image_data.hpp"
 
 #include "stb_image.h"
 

@@ -1,11 +1,11 @@
 #ifndef SIMPLEENGINE_RENDER_QUEUE_HPP
 #define SIMPLEENGINE_RENDER_QUEUE_HPP
 
-#include "simple-renderer/shader_program.hpp"
-#include "simple-renderer/mesh.hpp"
-#include "simple-renderer/camera.hpp"
-#include "simple-renderer/command_queue.hpp"
-#include "simple-renderer/draw_command.hpp"
+#include "simple_renderer/shader_program.hpp"
+#include "simple_renderer/mesh.hpp"
+#include "simple_renderer/camera.hpp"
+#include "simple_renderer/command_queue.hpp"
+#include "simple_renderer/draw_command.hpp"
 
 #include "glutils/guard.hpp"
 #include "glutils/program.hpp"

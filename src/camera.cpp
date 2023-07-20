@@ -1,9 +1,9 @@
-#include <simple-renderer/camera.hpp>
+#include "simple_renderer/camera.hpp"
 
-#include "simple-renderer/glsl_definitions.hpp"
+#include "simple_renderer/glsl_definitions.hpp"
 #include "glutils/gl.hpp"
 
-#include <glm/gtc/type_ptr.hpp>
+#include "glm/gtc/type_ptr.hpp"
 
 #include <array>
 

@@ -21,6 +21,15 @@ void loadGL(glLoader loader);
  */
 void setViewport(glm::ivec2 lower_left, glm::ivec2 top_right);
 
+enum class Capability : std::uint32_t
+{
+    cull_face   = 0x0B44,
+    depth_test  = 0X0B71
+};
+
+void enable(Capability capability);
+void disable(Capability capability);
+
 }//Simple::Renderer
 
 #endif //SIMPLERENDERER_RENDERER_HPP

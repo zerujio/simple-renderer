@@ -1,4 +1,4 @@
-#include "simple-renderer/vertex_array.hpp"
+#include "simple_renderer/vertex_array.hpp"
 
 #include "glm/vec2.hpp"
 

@@ -1,7 +1,7 @@
 #ifndef SIMPLERENDERER_MESH_DESCRIPTOR_HPP
 #define SIMPLERENDERER_MESH_DESCRIPTOR_HPP
 
-#include "simple-renderer/vertex_buffer.hpp"
+#include "simple_renderer/vertex_buffer.hpp"
 
 #include "glm/fwd.hpp"
 

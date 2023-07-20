@@ -1,9 +1,15 @@
-#include "simple-renderer/renderer.hpp"
+#include "simple_renderer/renderer.hpp"
+#include "simple_renderer/render_queue.hpp"
+
 #include "glutils/gl.hpp" // this header drags gl.h
 
-#include <GLFW/glfw3.h>
+#include "GLFW/glfw3.h"
+
+#include "glm/vec3.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 #include <iostream>
+#include <vector>
 
 struct Cube {
     static const std::vector<glm::vec3> vertex_positions;
@@ -23,7 +29,7 @@ struct UserData
 void updateResolution(GLFWwindow *window, int width, int height)
 {
     // setViewport operates on the OpenGL context; it does not need a Renderer instance.
-    Simple::Renderer::RenderQueue::setViewport(glm::ivec2(), glm::ivec2(width, height));
+    Simple::Renderer::setViewport(glm::ivec2(), glm::ivec2(width, height));
 
     auto data = static_cast<const UserData *>(glfwGetWindowUserPointer(window));
     data->camera.setProjectionMatrix(glm::perspectiveFov(data->camera_fov,
@@ -96,8 +102,10 @@ int main()
     )glsl";
 
     {
-        Simple::Renderer::RenderQueue renderer;
-        Simple::Renderer::Camera camera;
+        using namespace Simple::Renderer;
+
+        RenderQueue render_queue;
+        Camera camera;
 
         UserData callback_data {glm::pi<float>() / 2.0f, 0.01f, 100.0f, camera};
         glfwSetWindowUserPointer(window, &callback_data);
@@ -107,9 +115,9 @@ int main()
                                                        float(window_size.x), float(window_size.y),
                                                        callback_data.camera_near, callback_data.camera_far));
 
-        Simple::Renderer::ShaderProgram program {vert_src, frag_src}; // compile shaders
+        ShaderProgram program {vert_src, frag_src}; // compile shaders
 
-        Simple::Renderer::Mesh mesh
+        Mesh mesh
         {
                 Cube::vertex_positions,
                 Cube::vertex_normals,
@@ -117,14 +125,17 @@ int main()
                 Cube::indices
         };
 
+        enable(Capability::depth_test);
+        enable(Capability::cull_face);
+
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
 
             constexpr float angular_v = 0.75f;
             glm::mat4 transform{glm::rotate(glm::mat4(1.0f), float(glfwGetTime()) * angular_v, {0.0f, 1.0f, 0.0f})};
 
-            renderer.draw(mesh, program, transform);
-            renderer.finishFrame(camera);
+            render_queue.draw(mesh, program, transform);
+            render_queue.finishFrame(camera);
 
             glfwSwapBuffers(window);
         }

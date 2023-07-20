@@ -1,4 +1,4 @@
-#include "simple-renderer/buffer_range.hpp"
+#include "simple_renderer/buffer_range.hpp"
 
 #include <stdexcept>
 

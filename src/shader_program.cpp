@@ -1,8 +1,8 @@
-#include <simple-renderer/shader_program.hpp>
+#include "simple_renderer/shader_program.hpp"
 
-#include "simple-renderer/glsl_definitions.hpp"
+#include "simple_renderer/glsl_definitions.hpp"
 
-#include <glutils/error.hpp>
+#include "glutils/error.hpp"
 
 #include <sstream>
 #include <array>

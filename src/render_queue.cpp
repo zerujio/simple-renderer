@@ -1,6 +1,6 @@
-#include "simple-renderer/render_queue.hpp"
+#include "simple_renderer/render_queue.hpp"
 
-#include "simple-renderer/glsl_definitions.hpp"
+#include "simple_renderer/glsl_definitions.hpp"
 
 #include "glutils/gl.hpp"
 

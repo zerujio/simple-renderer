@@ -1,5 +1,5 @@
-#include "simple-renderer/texture_2d.hpp"
-#include "simple-renderer/image_data.hpp"
+#include "simple_renderer/texture_2d.hpp"
+#include "simple_renderer/image_data.hpp"
 
 #include "glm/common.hpp"
 

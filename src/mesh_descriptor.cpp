@@ -1,4 +1,4 @@
-#include "simple-renderer/mesh_descriptor.hpp"
+#include "simple_renderer/mesh_descriptor.hpp"
 
 namespace Simple::Renderer {
 

@@ -1,4 +1,4 @@
-#include "simple-renderer/instanced_mesh.hpp"
+#include "simple_renderer/instanced_mesh.hpp"
 
 namespace Simple {
 

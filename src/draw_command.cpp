@@ -1,4 +1,4 @@
-#include "simple-renderer/draw_command.hpp"
+#include "simple_renderer/draw_command.hpp"
 
 #include "glutils/gl.hpp"
 

@@ -1,11 +1,11 @@
 #ifndef SIMPLERENDERER_MESH_HPP
 #define SIMPLERENDERER_MESH_HPP
 
-#include "simple-renderer/drawable.hpp"
-#include "simple-renderer/vertex_buffer.hpp"
-#include "simple-renderer/vertex_array.hpp"
-#include "simple-renderer/vertex_attribute_specification.hpp"
-#include "simple-renderer/vertex_data_loader.hpp"
+#include "simple_renderer/drawable.hpp"
+#include "simple_renderer/vertex_buffer.hpp"
+#include "simple_renderer/vertex_array.hpp"
+#include "simple_renderer/vertex_attribute_specification.hpp"
+#include "simple_renderer/vertex_data_loader.hpp"
 
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"

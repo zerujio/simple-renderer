@@ -1,7 +1,7 @@
 #include "ostream_operators.hpp"
 #include "catch.hpp"
 
-#include "simple-renderer/vertex_buffer.hpp"
+#include "simple_renderer/vertex_buffer.hpp"
 
 #include "glm/glm.hpp"
 

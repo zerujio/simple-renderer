@@ -1,9 +1,9 @@
 #ifndef PROCEDURALPLACEMENTLIB_VERTEX_BUFFER_HPP
 #define PROCEDURALPLACEMENTLIB_VERTEX_BUFFER_HPP
 
-#include "simple-renderer/buffer.hpp"
-#include "simple-renderer/allocation_registry.hpp"
-#include "simple-renderer/buffer_ref.hpp"
+#include "simple_renderer/buffer.hpp"
+#include "simple_renderer/allocation_registry.hpp"
+#include "simple_renderer/buffer_ref.hpp"
 
 #include "glutils/vertex_attrib_utils.hpp"
 

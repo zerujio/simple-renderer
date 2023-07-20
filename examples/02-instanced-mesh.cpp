@@ -1,7 +1,9 @@
 #include "renderer-example-common.hpp"
 
-#include "simple-renderer/renderer.hpp"
-#include "simple-renderer/instanced_mesh.hpp"
+#include "simple_renderer/renderer.hpp"
+#include "simple_renderer/render_queue.hpp"
+#include "simple_renderer/camera.hpp"
+#include "simple_renderer/instanced_mesh.hpp"
 
 #include "glutils/gl.hpp"
 #include "GLFW/glfw3.h"
@@ -18,7 +20,7 @@ struct {
 
 void updateResolution(GLFWwindow* window, int width, int height)
 {
-    Simple::Renderer::RenderQueue::setViewport(glm::ivec2(), glm::ivec2(width, height));
+    Simple::Renderer::setViewport(glm::ivec2(), glm::ivec2(width, height));
 
     if (s_camera.ptr)
         s_camera.ptr->setProjectionMatrix(glm::perspectiveFov(s_camera.fov, float(width), float(height),
@@ -66,9 +68,14 @@ void main()
 
 void renderLoop(GLFWwindow* window)
 {
-    Simple::Renderer::RenderQueue renderer;
+    using namespace Simple::Renderer;
 
-    Simple::Renderer::Camera camera;
+    RenderQueue render_queue;
+
+    enable(Capability::cull_face);
+    enable(Capability::depth_test);
+
+    Camera camera;
     s_camera.ptr = &camera;
     camera.setViewMatrix(glm::lookAt(glm::vec3(5.0f, 5.0f, 5.0f), {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}));
     {
@@ -78,7 +85,7 @@ void renderLoop(GLFWwindow* window)
                                                        s_camera.near, s_camera.far));
     }
 
-    Simple::Renderer::ShaderProgram shader_program{vertex_shader, fragment_shader};
+    ShaderProgram shader_program{vertex_shader, fragment_shader};
 
     std::array<glm::vec3, 27> instance_offsets {};
     {
@@ -91,11 +98,11 @@ void renderLoop(GLFWwindow* window)
                     instance_offsets[i++] = {x, y, z};
     }
 
-    Simple::Renderer::InstancedMesh<glm::vec3> mesh
+    InstancedMesh<glm::vec3> mesh
     {
-            Simple::Renderer::Mesh{Cube::vertex_positions, Cube::vertex_normals, Cube::vertex_uvs, Cube::indices},
-            Simple::Renderer::AttribIndex(4),
-            Simple::Renderer::VertexDataInitializer<glm::vec3>{instance_offsets},
+            Mesh{Cube::vertex_positions, Cube::vertex_normals, Cube::vertex_uvs, Cube::indices},
+            AttribIndex(4),
+            VertexDataInitializer<glm::vec3>{instance_offsets},
             1
     };
 
@@ -106,8 +113,8 @@ void renderLoop(GLFWwindow* window)
         constexpr float angular_v = 0.75f;
         glm::mat4 transform{glm::rotate(glm::mat4(1.0f), float(glfwGetTime()) * angular_v, {0.0f, 1.0f, 0.0f})};
 
-        renderer.draw(mesh, shader_program, transform);
-        renderer.finishFrame(camera);
+        render_queue.draw(mesh, shader_program, transform);
+        render_queue.finishFrame(camera);
 
         glfwSwapBuffers(window);
     }
